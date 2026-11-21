@@ -6,12 +6,12 @@
 
 **Bloqueado por:** 01 — Configuração dos agentes e do fluxo de trabalho
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Critérios de aceite:**
 
-- [ ] Antes de cada commit, o lint roda nos arquivos alterados e a mensagem é conferida no padrão Conventional Commits; mensagem com coautoria do Claude é recusada.
-- [ ] `.editorconfig` e versão do Node fixada, iguais às da API.
-- [ ] CI no GitHub Actions a cada pull request e a cada push na `develop` e na `main`: instalação com pnpm e cache, lint, checagem de tipos, testes e build.
-- [ ] O `package-lock.json` fica no `.gitignore`, porque o projeto usa pnpm.
-- [ ] Modelo de pull request igual ao da API.
+- [x] Antes de cada commit, o lint roda nos arquivos alterados e a mensagem é conferida no padrão Conventional Commits; mensagem com coautoria do Claude é recusada.
+- [x] `.editorconfig` e versão do Node fixada, iguais às da API.
+- [x] CI no GitHub Actions a cada pull request e a cada push na `develop` e na `main`: instalação com pnpm e cache, lint, checagem de tipos, testes e build.
+- [x] O `package-lock.json` fica no `.gitignore`, porque o projeto usa pnpm.
+- [x] Modelo de pull request igual ao da API.
