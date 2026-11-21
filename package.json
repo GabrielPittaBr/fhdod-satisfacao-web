@@ -24,6 +24,9 @@
     "url": "https://github.com/GabrielPittaBr/frontend-fhdod/issues"
   },
   "homepage": "https://github.com/GabrielPittaBr/frontend-fhdod#readme",
+  "engines": {
+    "node": "^26.13.0"
+  },
   "packageManager": "pnpm@12.18.0",
   "dependencies": {
     "@fontsource-variable/lexend": "^5.3.0",
