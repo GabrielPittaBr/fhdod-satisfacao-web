@@ -4,6 +4,8 @@ Front-end do Sistema de Avaliação da Fundação Hospitalar Doutor Oswaldo Dies
 
 Enquanto a API não existe, os dados são simulados no próprio navegador (`src/mocks/`). Uma avaliação enviada na pesquisa aparece no painel e na TV abertos no mesmo navegador.
 
+Antes de trabalhar no repositório, leia o [`AGENTS.md`](AGENTS.md): fluxo de branches, padrão de commits, tickets, definição de pronto e as regras que já valem no front. As regras de negócio estão no [Plano de Desenvolvimento](https://github.com/GabrielPittaBr/fhdod-satisfacao-api/blob/develop/docs/Plano%20de%20Desenvolvimento%20-%20FHDOD.md), no repositório da API.
+
 ## Como rodar
 
 Precisa do Node 22 ou mais recente. O gerenciador é o pnpm (a versão está em `packageManager`); sem ele instalado, use `corepack pnpm` no lugar de `pnpm`.
@@ -47,5 +49,7 @@ O build é um site estático. `vercel.json` (Vercel) e `public/_redirects` (Netl
 
 ## Documentos
 
+- `AGENTS.md`: como trabalhar no repositório, para pessoas e agentes.
 - `docs/plano-frontend.md`: o plano deste front-end.
+- `docs/tickets/`: os tickets, espelhados como issues no GitHub.
 - `docs/registros/`: o registro de cada etapa, com as decisões e o porquê.
