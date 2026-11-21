@@ -1,4 +1,15 @@
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import type { Granularidade, PontoEvolucao } from '@/lib/api/tipos'
 import { npsComSinal, numero, rotuloDoPeriodo } from '@/lib/format'
 
@@ -67,8 +78,22 @@ export function GraficoEvolucao({
             strokeWidth={2 * escala}
             strokeLinecap="round"
             strokeLinejoin="round"
-            dot={dados.length <= 16 ? { r: 3 * escala, fill: 'var(--primary)', stroke: 'var(--background)', strokeWidth: 2 * escala } : false}
-            activeDot={{ r: 5 * escala, fill: 'var(--primary)', stroke: 'var(--background)', strokeWidth: 2 * escala }}
+            dot={
+              dados.length <= 16
+                ? {
+                    r: 3 * escala,
+                    fill: 'var(--primary)',
+                    stroke: 'var(--background)',
+                    strokeWidth: 2 * escala,
+                  }
+                : false
+            }
+            activeDot={{
+              r: 5 * escala,
+              fill: 'var(--primary)',
+              stroke: 'var(--background)',
+              strokeWidth: 2 * escala,
+            }}
             isAnimationActive={false}
           />
         </LineChart>
@@ -84,9 +109,22 @@ export function GraficoEvolucao({
             height={Math.round(fonte * 2.4)}
             tickFormatter={(periodo: string) => rotuloDoPeriodo(periodo, granularidade)}
           />
-          <YAxis width={larguraDoEixo} tickLine={false} axisLine={false} tick={eixo} allowDecimals={false} tickCount={3} />
+          <YAxis
+            width={larguraDoEixo}
+            tickLine={false}
+            axisLine={false}
+            tick={eixo}
+            allowDecimals={false}
+            tickCount={3}
+          />
           <Tooltip content={() => null} cursor={{ fill: 'var(--muted)' }} />
-          <Bar dataKey="total" fill="var(--input)" radius={[4 * escala, 4 * escala, 0, 0]} maxBarSize={24 * escala} isAnimationActive={false} />
+          <Bar
+            dataKey="total"
+            fill="var(--input)"
+            radius={[4 * escala, 4 * escala, 0, 0]}
+            maxBarSize={24 * escala}
+            isAnimationActive={false}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

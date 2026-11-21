@@ -54,7 +54,8 @@ export function emitirRefresh(usuarioId: number) {
 
 export function revogarSessoes(usuarioId: number) {
   banco.refreshTokens = banco.refreshTokens.filter((r) => r.usuarioId !== usuarioId)
-  for (const [token, acesso] of tokensDeAcesso) if (acesso.usuarioId === usuarioId) tokensDeAcesso.delete(token)
+  for (const [token, acesso] of tokensDeAcesso)
+    if (acesso.usuarioId === usuarioId) tokensDeAcesso.delete(token)
 }
 
 /** POST /auth/login */
@@ -102,7 +103,13 @@ export async function me(token: string): Promise<Envelope<Sessao>> {
   const { usuario, permissoes, setorIds } = autenticar(token)
   return {
     data: {
-      usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email, perfil: usuario.perfil, trocarSenha: usuario.trocarSenha },
+      usuario: {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        perfil: usuario.perfil,
+        trocarSenha: usuario.trocarSenha,
+      },
       permissoes,
       setores: banco.setores.filter((s) => setorIds?.includes(s.id)).map(({ id, nome }) => ({ id, nome })),
       todosSetores: setorIds === null,
@@ -113,14 +120,19 @@ export async function me(token: string): Promise<Envelope<Sessao>> {
 export const senhaValida = (senha: string) => senha.length >= 10 && /[a-z]/i.test(senha) && /\d/.test(senha)
 
 /** PATCH /auth/senha */
-export async function trocarSenha(token: string, corpo: { senhaAtual: string; novaSenha: string }): Promise<void> {
+export async function trocarSenha(
+  token: string,
+  corpo: { senhaAtual: string; novaSenha: string },
+): Promise<void> {
   await rede()
   const { usuario } = autenticar(token)
   if (usuario.senha !== corpo.senhaAtual) {
     throw erros.validacao([{ campo: 'senhaAtual', mensagem: 'A senha atual não confere.' }])
   }
   if (!senhaValida(corpo.novaSenha)) {
-    throw erros.validacao([{ campo: 'novaSenha', mensagem: 'Use pelo menos 10 caracteres, com letras e números.' }])
+    throw erros.validacao([
+      { campo: 'novaSenha', mensagem: 'Use pelo menos 10 caracteres, com letras e números.' },
+    ])
   }
   usuario.senha = corpo.novaSenha
   usuario.trocarSenha = false
@@ -131,7 +143,12 @@ export async function trocarSenha(token: string, corpo: { senhaAtual: string; no
 
 /** Só existe no mock: atalhos de demonstração da tela de login. Some quando a API chegar. */
 export function acessosDemo(): { usuarios: AcessoDemo[]; links: { rotulo: string; url: string }[] } {
-  const rotulos = { SUPER_ADMIN: 'Super Admin', GESTOR: 'Gestor de setor', OUVIDORIA: 'Ouvidoria', VISUALIZADOR: 'Visualizador' }
+  const rotulos = {
+    SUPER_ADMIN: 'Super Admin',
+    GESTOR: 'Gestor de setor',
+    OUVIDORIA: 'Ouvidoria',
+    VISUALIZADOR: 'Visualizador',
+  }
   const setor = banco.setores.find((s) => s.ativo)
   const tela = banco.tvTelas.find((t) => t.ativa && TV_TELAS.some((seed) => seed.token === t.token))
   return {

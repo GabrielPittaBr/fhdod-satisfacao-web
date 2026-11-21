@@ -29,7 +29,9 @@ export function EtapaContato({
   function enviar() {
     const digitos = telefone.replace(/\D/g, '')
     const novos = {
-      telefone: /^\d{10,11}$/.test(digitos) ? undefined : 'Digite o telefone com o DDD, como (51) 99999-0000.',
+      telefone: /^\d{10,11}$/.test(digitos)
+        ? undefined
+        : 'Digite o telefone com o DDD, como (51) 99999-0000.',
       autorizacao: autorizou ? undefined : 'Marque a autorização para o hospital poder ligar.',
     }
     setErros(novos)
@@ -42,7 +44,9 @@ export function EtapaContato({
   return (
     <>
       <Titulo>Quer que o hospital entre em contato com você?</Titulo>
-      <p className="mt-2 text-muted-foreground">Se quiser, deixe um telefone. A Ouvidoria liga para conversar sobre o que aconteceu.</p>
+      <p className="mt-2 text-muted-foreground">
+        Se quiser, deixe um telefone. A Ouvidoria liga para conversar sobre o que aconteceu.
+      </p>
 
       <label htmlFor={`${id}-telefone`} className="mt-6 block font-semibold">
         Telefone com DDD
@@ -77,7 +81,10 @@ export function EtapaContato({
           onChange={(evento) => setAutorizou(evento.target.checked)}
           className="mt-0.5 size-7 shrink-0 accent-primary"
         />
-        <span>Autorizo o hospital a me ligar neste número para falar sobre esta avaliação. Só a Ouvidoria verá o telefone.</span>
+        <span>
+          Autorizo o hospital a me ligar neste número para falar sobre esta avaliação. Só a Ouvidoria verá o
+          telefone.
+        </span>
       </label>
       {erros.autorizacao && (
         <p id={`${id}-erro-autorizacao`} className="mt-2 font-medium text-destructive">

@@ -1,14 +1,34 @@
 // Cadastros do painel: setores, categorias, turnos, perguntas, usuários e telas de TV.
-import type { Categoria, DetalheErro, Envelope, Perfil, Pergunta, Setor, TelaTv, TipoPergunta, Turno, Usuario } from '@/lib/api/tipos'
+import type {
+  Categoria,
+  DetalheErro,
+  Envelope,
+  Perfil,
+  Pergunta,
+  Setor,
+  TelaTv,
+  TipoPergunta,
+  Turno,
+  Usuario,
+} from '@/lib/api/tipos'
 import { autenticar, emitirRefresh, exigir, exigirSetor, revogarSessoes } from './auth'
-import { banco, proximoId, restaurarDadosIniciais, salvar, todasAsRespostas, type UsuarioBanco } from './banco'
+import {
+  banco,
+  proximoId,
+  restaurarDadosIniciais,
+  salvar,
+  todasAsRespostas,
+  type UsuarioBanco,
+} from './banco'
 import { erros, rede, tokenAleatorio } from './rede'
 
 const PERFIS: Perfil[] = ['SUPER_ADMIN', 'GESTOR', 'OUVIDORIA', 'VISUALIZADOR']
 const TIPOS: TipoPergunta[] = ['ESCALA_1_5', 'SIM_NAO', 'MULTIPLA_ESCOLHA', 'TEXTO']
 
 function validar(regras: [campo: string, valido: boolean, mensagem: string][]) {
-  const detalhes: DetalheErro[] = regras.filter(([, valido]) => !valido).map(([campo, , mensagem]) => ({ campo, mensagem }))
+  const detalhes: DetalheErro[] = regras
+    .filter(([, valido]) => !valido)
+    .map(([campo, , mensagem]) => ({ campo, mensagem }))
   if (detalhes.length) throw erros.validacao(detalhes)
 }
 
@@ -54,7 +74,13 @@ export async function criarSetor(token: string, corpo: DadosSetor): Promise<Enve
   await rede()
   exigir(autenticar(token), 'setores:gerenciar')
   validarSetor(corpo)
-  const setor: Setor = { id: proximoId(banco.setores), nome: corpo.nome.trim(), slug: corpo.slug, descricao: corpo.descricao?.trim() || null, ativo: true }
+  const setor: Setor = {
+    id: proximoId(banco.setores),
+    nome: corpo.nome.trim(),
+    slug: corpo.slug,
+    descricao: corpo.descricao?.trim() || null,
+    ativo: true,
+  }
   banco.setores.push(setor)
   salvar()
   return { data: setor }
@@ -66,7 +92,11 @@ export async function editarSetor(token: string, id: number, corpo: DadosSetor):
   exigir(autenticar(token), 'setores:gerenciar')
   const setor = achar(banco.setores, id, 'Setor')
   validarSetor(corpo, id)
-  Object.assign(setor, { nome: corpo.nome.trim(), slug: corpo.slug, descricao: corpo.descricao?.trim() || null })
+  Object.assign(setor, {
+    nome: corpo.nome.trim(),
+    slug: corpo.slug,
+    descricao: corpo.descricao?.trim() || null,
+  })
   salvar()
   return { data: setor }
 }
@@ -112,7 +142,11 @@ export async function criarCategoria(token: string, corpo: { nome: string }): Pr
 }
 
 /** PATCH /categorias/:id (edita ou desativa) */
-export async function editarCategoria(token: string, id: number, corpo: { nome?: string; ativa?: boolean }): Promise<Envelope<Categoria>> {
+export async function editarCategoria(
+  token: string,
+  id: number,
+  corpo: { nome?: string; ativa?: boolean },
+): Promise<Envelope<Categoria>> {
   await rede()
   exigir(autenticar(token), 'categorias:gerenciar')
   const categoria = achar(banco.categorias, id, 'Categoria')
@@ -188,14 +222,23 @@ function perguntasComResposta() {
 }
 
 function normalizarPergunta(corpo: DadosPergunta): DadosPergunta {
-  const opcoes = corpo.tipo === 'MULTIPLA_ESCOLHA' ? (corpo.opcoes ?? []).map((o) => o.trim()).filter(Boolean) : null
+  const opcoes =
+    corpo.tipo === 'MULTIPLA_ESCOLHA' ? (corpo.opcoes ?? []).map((o) => o.trim()).filter(Boolean) : null
   validar([
     ['texto', corpo.texto.trim().length >= 5, 'Escreva a pergunta'],
-    ['texto', corpo.texto.trim().length <= 140, 'Use no máximo 140 caracteres: perguntas curtas são mais respondidas'],
+    [
+      'texto',
+      corpo.texto.trim().length <= 140,
+      'Use no máximo 140 caracteres: perguntas curtas são mais respondidas',
+    ],
     ['categoriaId', banco.categorias.some((c) => c.id === corpo.categoriaId), 'Escolha uma categoria'],
     ['tipo', TIPOS.includes(corpo.tipo), 'Escolha o tipo da pergunta'],
     ['opcoes', opcoes === null || (opcoes.length >= 2 && opcoes.length <= 5), 'Informe de 2 a 5 opções'],
-    ['opcoes', opcoes === null || new Set(opcoes.map((o) => o.toLowerCase())).size === opcoes.length, 'As opções não podem se repetir'],
+    [
+      'opcoes',
+      opcoes === null || new Set(opcoes.map((o) => o.toLowerCase())).size === opcoes.length,
+      'As opções não podem se repetir',
+    ],
   ])
   return { texto: corpo.texto.trim(), categoriaId: corpo.categoriaId, tipo: corpo.tipo, opcoes }
 }
@@ -217,7 +260,11 @@ export async function listarPerguntas(token: string, setorId: number): Promise<E
 }
 
 /** POST /setores/:setorId/perguntas */
-export async function criarPergunta(token: string, setorId: number, corpo: DadosPergunta): Promise<Envelope<Pergunta>> {
+export async function criarPergunta(
+  token: string,
+  setorId: number,
+  corpo: DadosPergunta,
+): Promise<Envelope<Pergunta>> {
   await rede()
   const contexto = autenticar(token)
   exigir(contexto, 'perguntas:gerenciar')
@@ -236,7 +283,11 @@ export async function criarPergunta(token: string, setorId: number, corpo: Dados
 }
 
 /** PATCH /perguntas/:id */
-export async function editarPergunta(token: string, id: number, corpo: DadosPergunta): Promise<Envelope<Pergunta>> {
+export async function editarPergunta(
+  token: string,
+  id: number,
+  corpo: DadosPergunta,
+): Promise<Envelope<Pergunta>> {
   await rede()
   const contexto = autenticar(token)
   exigir(contexto, 'perguntas:gerenciar')
@@ -245,7 +296,9 @@ export async function editarPergunta(token: string, id: number, corpo: DadosPerg
   const temRespostas = perguntasComResposta().has(id)
   // Quem já respondeu viu a pergunta com este tipo: trocar mudaria o sentido do histórico.
   if (temRespostas && corpo.tipo !== pergunta.tipo) {
-    throw erros.conflito('Esta pergunta já tem respostas, então o tipo não pode mudar. Crie outra pergunta e desative esta.')
+    throw erros.conflito(
+      'Esta pergunta já tem respostas, então o tipo não pode mudar. Crie outra pergunta e desative esta.',
+    )
   }
   Object.assign(pergunta, normalizarPergunta(corpo))
   salvar()
@@ -259,7 +312,13 @@ export async function salvarOrdemDasPerguntas(token: string, setorId: number, id
   exigir(contexto, 'perguntas:gerenciar')
   exigirSetor(contexto, setorId)
   const doSetor = banco.perguntas.filter((p) => p.setorId === setorId)
-  validar([['ids', ids.length === doSetor.length && doSetor.every((p) => ids.includes(p.id)), 'A lista precisa ter todas as perguntas do setor']])
+  validar([
+    [
+      'ids',
+      ids.length === doSetor.length && doSetor.every((p) => ids.includes(p.id)),
+      'A lista precisa ter todas as perguntas do setor',
+    ],
+  ])
   for (const pergunta of doSetor) pergunta.ordem = ids.indexOf(pergunta.id) + 1
   salvar()
 }
@@ -306,7 +365,10 @@ export async function listarUsuarios(token: string): Promise<Envelope<Usuario[]>
 }
 
 /** POST /usuarios: cria com senha provisória, devolvida uma única vez. */
-export async function criarUsuario(token: string, corpo: DadosUsuario): Promise<Envelope<{ usuario: Usuario; senhaProvisoria: string }>> {
+export async function criarUsuario(
+  token: string,
+  corpo: DadosUsuario,
+): Promise<Envelope<{ usuario: Usuario; senhaProvisoria: string }>> {
   await rede()
   exigir(autenticar(token), 'usuarios:gerenciar')
   validarUsuario(corpo)
@@ -327,7 +389,11 @@ export async function criarUsuario(token: string, corpo: DadosUsuario): Promise<
 }
 
 /** PATCH /usuarios/:id (nome e perfil) */
-export async function editarUsuario(token: string, id: number, corpo: Pick<DadosUsuario, 'nome' | 'perfil'>): Promise<Envelope<Usuario>> {
+export async function editarUsuario(
+  token: string,
+  id: number,
+  corpo: Pick<DadosUsuario, 'nome' | 'perfil'>,
+): Promise<Envelope<Usuario>> {
   await rede()
   exigir(autenticar(token), 'usuarios:gerenciar')
   const usuario = achar(banco.usuarios, id, 'Usuário')
@@ -342,7 +408,9 @@ export async function definirSetoresDoUsuario(token: string, id: number, setorId
   await rede()
   exigir(autenticar(token), 'usuarios:gerenciar')
   const usuario = achar(banco.usuarios, id, 'Usuário')
-  validar([['setorIds', setorIds.every((s) => banco.setores.some((setor) => setor.id === s)), 'Setor inválido']])
+  validar([
+    ['setorIds', setorIds.every((s) => banco.setores.some((setor) => setor.id === s)), 'Setor inválido'],
+  ])
   usuario.setorIds = [...new Set(setorIds)]
   salvar()
 }
@@ -353,14 +421,18 @@ export async function alterarStatusUsuario(token: string, id: number, ativo: boo
   const contexto = autenticar(token)
   exigir(contexto, 'usuarios:gerenciar')
   const usuario = achar(banco.usuarios, id, 'Usuário')
-  if (!ativo && usuario.id === contexto.usuario.id) throw erros.conflito('Você não pode desativar a própria conta.')
+  if (!ativo && usuario.id === contexto.usuario.id)
+    throw erros.conflito('Você não pode desativar a própria conta.')
   usuario.ativo = ativo
   if (!ativo) revogarSessoes(id)
   salvar()
 }
 
 /** POST /usuarios/:id/redefinir-senha */
-export async function redefinirSenha(token: string, id: number): Promise<Envelope<{ senhaProvisoria: string }>> {
+export async function redefinirSenha(
+  token: string,
+  id: number,
+): Promise<Envelope<{ senhaProvisoria: string }>> {
   await rede()
   exigir(autenticar(token), 'usuarios:gerenciar')
   const usuario = achar(banco.usuarios, id, 'Usuário')
@@ -383,11 +455,20 @@ export async function listarTelasTv(token: string): Promise<Envelope<TelaTv[]>> 
 }
 
 /** POST /tv-telas: o token da tela só é devolvido aqui, uma única vez. */
-export async function criarTelaTv(token: string, corpo: { nome: string }): Promise<Envelope<{ tela: TelaTv; token: string }>> {
+export async function criarTelaTv(
+  token: string,
+  corpo: { nome: string },
+): Promise<Envelope<{ tela: TelaTv; token: string }>> {
   await rede()
   exigir(autenticar(token), 'tvwall:gerenciar')
   validar([['nome', corpo.nome.trim().length >= 2, 'Informe onde a tela fica']])
-  const tela = { id: proximoId(banco.tvTelas), nome: corpo.nome.trim(), ativa: true, ultimoAcessoEm: null, token: tokenAleatorio() }
+  const tela = {
+    id: proximoId(banco.tvTelas),
+    nome: corpo.nome.trim(),
+    ativa: true,
+    ultimoAcessoEm: null,
+    token: tokenAleatorio(),
+  }
   banco.tvTelas.push(tela)
   salvar()
   return { data: { tela: telaParaApi(tela), token: tela.token } }

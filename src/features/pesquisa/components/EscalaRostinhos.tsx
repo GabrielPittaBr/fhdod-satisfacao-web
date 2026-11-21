@@ -21,7 +21,11 @@ export function EscalaRostinhos({
   const marcado = recente ?? valor
 
   return (
-    <div role="group" aria-label={pergunta} className="grid gap-2.5 @min-[560px]:grid-cols-5 @min-[560px]:gap-3">
+    <div
+      role="group"
+      aria-label={pergunta}
+      className="grid gap-2.5 @min-[560px]:grid-cols-5 @min-[560px]:gap-3"
+    >
       {NIVEIS.map((nivel) => {
         const selecionado = marcado === nivel.valor
         return (
@@ -43,8 +47,17 @@ export function EscalaRostinhos({
               recente !== null && !selecionado && 'opacity-40',
             )}
           >
-            <img src={nivel.imagem} alt="" width={96} height={96} draggable={false} className="size-12 shrink-0 @min-[560px]:size-20" />
-            <span className="flex-1 text-xl font-semibold @min-[560px]:flex @min-[560px]:flex-none @min-[560px]:items-center @min-[560px]:text-lg/tight">{nivel.rotulo}</span>
+            <img
+              src={nivel.imagem}
+              alt=""
+              width={96}
+              height={96}
+              draggable={false}
+              className="size-12 shrink-0 @min-[560px]:size-20"
+            />
+            <span className="flex-1 text-xl font-semibold @min-[560px]:flex @min-[560px]:flex-none @min-[560px]:items-center @min-[560px]:text-lg/tight">
+              {nivel.rotulo}
+            </span>
             {selecionado && (
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-background @min-[560px]:absolute @min-[560px]:top-2 @min-[560px]:right-2 @min-[560px]:size-7">
                 <Check aria-hidden className="size-5" strokeWidth={3.5} />

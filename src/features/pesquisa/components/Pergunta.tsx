@@ -14,7 +14,8 @@ interface Props {
 
 /** Uma pergunta do setor, no formato do seu tipo. Usada na pesquisa e na prévia do painel. */
 export function Pergunta({ pergunta, resposta, limiteTexto, aoResponder }: Props) {
-  const responder = (valor: Omit<ItemEnvio, 'perguntaId'>) => aoResponder({ perguntaId: pergunta.id, ...valor })
+  const responder = (valor: Omit<ItemEnvio, 'perguntaId'>) =>
+    aoResponder({ perguntaId: pergunta.id, ...valor })
 
   if (pergunta.tipo === 'ESCALA_1_5') {
     return (

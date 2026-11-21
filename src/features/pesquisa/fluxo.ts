@@ -2,7 +2,8 @@
 // nunca em localStorage, sessionStorage ou URL: o próximo paciente não vê nada do anterior.
 import type { Canal, Complemento, EnvioResposta, ItemEnvio, RespostaCriada, Turno } from '@/lib/api/tipos'
 
-export type Etapa = 'abertura' | 'data' | 'turno' | 'pergunta' | 'nps' | 'comentario' | 'contato' | 'agradecimento'
+export type Etapa =
+  'abertura' | 'data' | 'turno' | 'pergunta' | 'nps' | 'comentario' | 'contato' | 'agradecimento'
 export type Comentario = NonNullable<Complemento['comentario']>
 
 export interface EstadoFluxo {
@@ -57,7 +58,10 @@ const irPara = (e: EstadoFluxo, indice: number): EstadoFluxo =>
     ? { ...e, etapa: 'pergunta', indice }
     : { ...e, etapa: 'nps', indice: e.perguntaIds.length }
 
-const antesDasPerguntas = (e: EstadoFluxo): EstadoFluxo => ({ ...e, etapa: e.semDataTurno ? 'abertura' : 'turno' })
+const antesDasPerguntas = (e: EstadoFluxo): EstadoFluxo => ({
+  ...e,
+  etapa: e.semDataTurno ? 'abertura' : 'turno',
+})
 
 export function redutor(e: EstadoFluxo, acao: AcaoFluxo): EstadoFluxo {
   switch (acao.tipo) {
@@ -87,7 +91,8 @@ export function redutor(e: EstadoFluxo, acao: AcaoFluxo): EstadoFluxo {
     case 'VOLTAR':
       if (e.etapa === 'data') return { ...e, etapa: 'abertura' }
       if (e.etapa === 'turno') return { ...e, etapa: 'data' }
-      if (e.etapa === 'pergunta' || e.etapa === 'nps') return e.indice > 0 ? irPara(e, e.indice - 1) : antesDasPerguntas(e)
+      if (e.etapa === 'pergunta' || e.etapa === 'nps')
+        return e.indice > 0 ? irPara(e, e.indice - 1) : antesDasPerguntas(e)
       // depois do envio só dá para voltar do telefone ao comentário
       if (e.etapa === 'contato') return { ...e, etapa: 'comentario' }
       return e

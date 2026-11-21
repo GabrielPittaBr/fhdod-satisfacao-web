@@ -17,8 +17,7 @@ export const LIMITES_PADRAO: Limites = {
 }
 
 const GRAVIDADE: Classificacao[] = ['NORMAL', 'BAIXA', 'BAIXISSIMA']
-const pior = (a: Classificacao, b: Classificacao) =>
-  GRAVIDADE.indexOf(a) >= GRAVIDADE.indexOf(b) ? a : b
+const pior = (a: Classificacao, b: Classificacao) => (GRAVIDADE.indexOf(a) >= GRAVIDADE.indexOf(b) ? a : b)
 
 export function classificarNps(nps: number, l: Limites = LIMITES_PADRAO): Classificacao {
   if (nps <= l.npsBaixissima) return 'BAIXISSIMA'

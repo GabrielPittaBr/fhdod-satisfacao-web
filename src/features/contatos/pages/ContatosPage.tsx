@@ -40,21 +40,32 @@ export default function ContatosPage() {
       descricao="Pessoas que deixaram o telefone e autorizaram o contato do hospital. Os números ficam mascarados; cada vez que alguém revela um, a ação fica registrada."
     >
       <Bloco>
-        <Consulta consulta={consulta} altura="h-72" vazio={(pedidos) => pedidos.length === 0} textoVazio="Ninguém pediu retorno até agora.">
+        <Consulta
+          consulta={consulta}
+          altura="h-72"
+          vazio={(pedidos) => pedidos.length === 0}
+          textoVazio="Ninguém pediu retorno até agora."
+        >
           {(pedidos) => (
             <ul className="grid gap-3">
               {pedidos.map((pedido) => {
                 const telefone = revelados[pedido.id]
                 return (
-                  <li key={pedido.id} className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto] md:items-start">
+                  <li
+                    key={pedido.id}
+                    className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto] md:items-start"
+                  >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="font-semibold">{pedido.setor}</h2>
                         <SeloClassificacao valor={pedido.classificacao} />
-                        <span className="rounded-md border border-input/50 px-1.5 text-xs leading-6 font-medium">Novo</span>
+                        <span className="rounded-md border border-input/50 px-1.5 text-xs leading-6 font-medium">
+                          Novo
+                        </span>
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Atendimento em {dataCurta(pedido.dataAtendimento)}. Nota de recomendação {pedido.nps}. Pedido feito em {dataHora(pedido.consentimentoEm)}.
+                        Atendimento em {dataCurta(pedido.dataAtendimento)}. Nota de recomendação {pedido.nps}.
+                        Pedido feito em {dataHora(pedido.consentimentoEm)}.
                       </p>
                       {pedido.comentario ? (
                         <p className="mt-3 flex flex-wrap items-start gap-2">
@@ -64,22 +75,35 @@ export default function ContatosPage() {
                       ) : (
                         <p className="mt-3 text-sm text-muted-foreground">Não deixou comentário.</p>
                       )}
-                      <Link to={`/painel/respostas?periodo=90d&resposta=${pedido.respostaId}`} className="mt-2 inline-flex min-h-9 items-center text-sm font-semibold text-primary underline underline-offset-4">
+                      <Link
+                        to={`/painel/respostas?periodo=90d&resposta=${pedido.respostaId}`}
+                        className="mt-2 inline-flex min-h-9 items-center text-sm font-semibold text-primary underline underline-offset-4"
+                      >
                         Ver a resposta completa
                       </Link>
                     </div>
                     <div className="flex flex-col gap-2 md:items-end">
                       {telefone ? (
-                        <a href={`tel:+55${telefone}`} className="numeros flex min-h-10 items-center gap-2 text-lg font-semibold">
+                        <a
+                          href={`tel:+55${telefone}`}
+                          className="numeros flex min-h-10 items-center gap-2 text-lg font-semibold"
+                        >
                           <Phone aria-hidden className="size-4" />
                           {mascararTelefone(telefone)}
                         </a>
                       ) : (
                         <>
-                          <p className="numeros text-lg font-semibold" aria-label={`Telefone terminado em ${pedido.telefoneMascarado.slice(-4)}`}>
+                          <p
+                            className="numeros text-lg font-semibold"
+                            aria-label={`Telefone terminado em ${pedido.telefoneMascarado.slice(-4)}`}
+                          >
                             {pedido.telefoneMascarado}
                           </p>
-                          <Button variant="outline" disabled={revelacao.isPending} onClick={() => setConfirmando(pedido)}>
+                          <Button
+                            variant="outline"
+                            disabled={revelacao.isPending}
+                            onClick={() => setConfirmando(pedido)}
+                          >
                             <Eye aria-hidden />
                             Revelar telefone
                           </Button>
@@ -99,12 +123,15 @@ export default function ContatosPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Revelar o telefone desta pessoa?</AlertDialogTitle>
             <AlertDialogDescription>
-              A consulta fica registrada com o seu nome, a data e a hora. Use o número só para dar o retorno que a pessoa pediu.
+              A consulta fica registrada com o seu nome, a data e a hora. Use o número só para dar o retorno
+              que a pessoa pediu.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => confirmando && revelacao.mutate(confirmando)}>Revelar telefone</AlertDialogAction>
+            <AlertDialogAction onClick={() => confirmando && revelacao.mutate(confirmando)}>
+              Revelar telefone
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

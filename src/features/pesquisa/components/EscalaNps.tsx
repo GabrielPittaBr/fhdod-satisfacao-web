@@ -17,7 +17,11 @@ export function EscalaNps({
 }) {
   return (
     <div>
-      <div role="group" aria-label={pergunta} className="grid grid-cols-6 gap-1.5 @min-[560px]:grid-cols-11 @min-[560px]:gap-2">
+      <div
+        role="group"
+        aria-label={pergunta}
+        className="grid grid-cols-6 gap-1.5 @min-[560px]:grid-cols-11 @min-[560px]:gap-2"
+      >
         {Array.from({ length: 11 }, (_, nota) => (
           <button
             key={nota}
@@ -38,7 +42,10 @@ export function EscalaNps({
           </button>
         ))}
       </div>
-      <p aria-hidden className="mt-3 flex flex-wrap justify-between gap-x-6 gap-y-1 text-lg text-muted-foreground">
+      <p
+        aria-hidden
+        className="mt-3 flex flex-wrap justify-between gap-x-6 gap-y-1 text-lg text-muted-foreground"
+      >
         <span>0 = nada provável</span>
         <span>10 = muito provável</span>
       </p>

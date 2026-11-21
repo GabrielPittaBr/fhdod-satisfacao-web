@@ -10,7 +10,13 @@ import { Titulo } from './Moldura'
  * Dia do atendimento, que nem sempre é o dia da resposta: muita gente responde em casa, à noite.
  * Data futura não é aceita.
  */
-export function EtapaData({ valor, aoEscolher }: { valor: string | null; aoEscolher: (data: string) => void }) {
+export function EtapaData({
+  valor,
+  aoEscolher,
+}: {
+  valor: string | null
+  aoEscolher: (data: string) => void
+}) {
   const agora = new Date()
   const hoje = isoDoDia(agora)
   const ontem = isoDoDia(subDays(agora, 1))
@@ -43,7 +49,12 @@ export function EtapaData({ valor, aoEscolher }: { valor: string | null; aoEscol
         >
           Ontem
         </Opcao>
-        <Opcao selecionada={outroDia} apagada={recente !== null} aria-expanded={outroDia} onClick={() => setOutroDia(true)}>
+        <Opcao
+          selecionada={outroDia}
+          apagada={recente !== null}
+          aria-expanded={outroDia}
+          onClick={() => setOutroDia(true)}
+        >
           Outro dia
         </Opcao>
       </div>

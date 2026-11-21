@@ -30,17 +30,25 @@ export function EtapaComentario({
   aoEnviar: (comentario: Comentario) => void
   aoPular: () => void
 }) {
-  const [tipo, setTipo] = useState<TipoComentario>(inicial?.tipo ?? (avaliacaoBaixa ? 'RECLAMACAO' : 'ELOGIO'))
+  const [tipo, setTipo] = useState<TipoComentario>(
+    inicial?.tipo ?? (avaliacaoBaixa ? 'RECLAMACAO' : 'ELOGIO'),
+  )
   const [texto, setTexto] = useState(inicial?.texto ?? '')
   const idTexto = useId()
   const idContador = useId()
 
   return (
     <>
-      <Titulo>{avaliacaoBaixa ? 'Quer contar o que aconteceu?' : 'Quer deixar um elogio ou uma sugestão?'}</Titulo>
+      <Titulo>
+        {avaliacaoBaixa ? 'Quer contar o que aconteceu?' : 'Quer deixar um elogio ou uma sugestão?'}
+      </Titulo>
       <p className="mt-2 text-muted-foreground">Sua avaliação já foi enviada. Escrever é opcional.</p>
 
-      <div role="group" aria-label="Tipo do comentário" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div
+        role="group"
+        aria-label="Tipo do comentário"
+        className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4"
+      >
         {TIPOS.map((opcao) => (
           <button
             key={opcao}
@@ -49,7 +57,9 @@ export function EtapaComentario({
             onClick={() => setTipo(opcao)}
             className={cn(
               'min-h-12 rounded-xl border-2 px-3 text-lg font-semibold transition-[background-color,border-color,transform] duration-150 active:scale-[0.97]',
-              tipo === opcao ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-card hover:border-primary',
+              tipo === opcao
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-input bg-card hover:border-primary',
             )}
           >
             {ROTULO_COMENTARIO[opcao]}
@@ -77,7 +87,11 @@ export function EtapaComentario({
 
       {erro && <Aviso className="mt-3">{erro}</Aviso>}
 
-      <BotaoPrincipal className="mt-4" disabled={!texto.trim() || enviando} onClick={() => aoEnviar({ tipo, texto: texto.trim() })}>
+      <BotaoPrincipal
+        className="mt-4"
+        disabled={!texto.trim() || enviando}
+        onClick={() => aoEnviar({ tipo, texto: texto.trim() })}
+      >
         {enviando ? 'Enviando…' : avaliacaoBaixa ? 'Continuar' : 'Enviar comentário'}
       </BotaoPrincipal>
       <BotaoDiscreto className="mt-2 w-full" disabled={enviando} onClick={aoPular}>

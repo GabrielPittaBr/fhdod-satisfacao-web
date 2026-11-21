@@ -23,13 +23,17 @@ export function ExigeSessao() {
 
   if (sessao) {
     // primeiro acesso: nada do painel abre antes da troca da senha provisória
-    if (sessao.usuario.trocarSenha && local.pathname !== '/painel/senha') return <Navigate to="/painel/senha" replace />
+    if (sessao.usuario.trocarSenha && local.pathname !== '/painel/senha')
+      return <Navigate to="/painel/senha" replace />
     return <Outlet />
   }
   if (recuperacao.isPending) return <Carregando texto="Abrindo o painel…" />
   if (recuperacao.isError) {
     return (
-      <TelaMensagem titulo="Não deu para abrir o painel" acao={<Button onClick={() => recuperacao.refetch()}>Tentar de novo</Button>}>
+      <TelaMensagem
+        titulo="Não deu para abrir o painel"
+        acao={<Button onClick={() => recuperacao.refetch()}>Tentar de novo</Button>}
+      >
         <p>Confira a internet e tente de novo.</p>
       </TelaMensagem>
     )
@@ -45,7 +49,8 @@ export function ExigePermissao({ permissoes, children }: { permissoes: Permissao
       <title>Sem acesso | Painel FHDOD</title>
       <h1 className="text-2xl font-bold">Você não tem acesso a esta página</h1>
       <p className="mt-2 text-muted-foreground">
-        O seu perfil não inclui esta área do painel. Se precisar dela, fale com quem administra o sistema no hospital.
+        O seu perfil não inclui esta área do painel. Se precisar dela, fale com quem administra o sistema no
+        hospital.
       </p>
       <Button asChild className="mt-6">
         <Link to="/painel">Voltar aos indicadores</Link>

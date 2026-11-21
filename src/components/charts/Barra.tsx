@@ -19,7 +19,11 @@ export function Barra({
   const largura = (Math.min(Math.abs(valor), faixa) / faixa) * 100
   const negativo = valor < 0
   return (
-    <span aria-hidden className="relative block h-4 border-l border-input" style={{ marginLeft: minimo < 0 ? 0 : undefined }}>
+    <span
+      aria-hidden
+      className="relative block h-4 border-l border-input"
+      style={{ marginLeft: minimo < 0 ? 0 : undefined }}
+    >
       {minimo < 0 && <span className="absolute inset-y-0 w-px bg-input" style={{ left: `${zero}%` }} />}
       <span
         className="absolute inset-y-0.5"

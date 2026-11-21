@@ -79,7 +79,11 @@ function inicial(): Banco {
     categorias: CATEGORIAS,
     turnos: TURNOS,
     perguntas: PERGUNTAS,
-    usuarios: USUARIOS.map(({ demo: _demo, ...usuario }) => ({ ...usuario, ativo: true, ultimoLoginEm: null })),
+    usuarios: USUARIOS.map(({ demo: _demo, ...usuario }) => ({
+      ...usuario,
+      ativo: true,
+      ultimoLoginEm: null,
+    })),
     tvTelas: TV_TELAS,
     configuracoes: CONFIGURACOES,
     respostasNovas: [],
@@ -105,7 +109,10 @@ export let banco = carregar()
 // O histórico é recalculado a cada carga (semente fixa por dia), então não ocupa o localStorage.
 // Só é gerado quando o painel ou a TV pedem: a pesquisa do paciente não paga esse custo.
 let historico: RespostaBanco[] | null = null
-export const todasAsRespostas = (): RespostaBanco[] => [...(historico ??= gerarHistorico()), ...banco.respostasNovas]
+export const todasAsRespostas = (): RespostaBanco[] => [
+  ...(historico ??= gerarHistorico()),
+  ...banco.respostasNovas,
+]
 
 export function salvar() {
   if (!temStorage) return

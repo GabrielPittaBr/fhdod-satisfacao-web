@@ -8,8 +8,7 @@
 @custom-variant alta (@media (min-height: 60rem));
 
 @theme inline {
-  --font-sans:
-    'Lexend Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Lexend Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-heading: var(--font-sans);
 
   --color-background: var(--background);

@@ -6,12 +6,14 @@ import * as mock from '@/mocks/consultas'
 /** GET /dashboard/resumo */
 export const buscarResumo = (f: FiltrosDashboard) => comToken(async (t) => (await mock.resumo(t, f)).data)
 /** GET /dashboard/nps-por-setor */
-export const buscarNpsPorSetor = (f: FiltrosDashboard) => comToken(async (t) => (await mock.npsPorSetor(t, f)).data)
+export const buscarNpsPorSetor = (f: FiltrosDashboard) =>
+  comToken(async (t) => (await mock.npsPorSetor(t, f)).data)
 /** GET /dashboard/evolucao */
 export const buscarEvolucao = (f: FiltrosDashboard, granularidade: Granularidade) =>
   comToken(async (t) => (await mock.evolucao(t, f, granularidade)).data)
 /** GET /dashboard/categorias */
-export const buscarCategorias = (f: FiltrosDashboard) => comToken(async (t) => (await mock.categorias(t, f)).data)
+export const buscarCategorias = (f: FiltrosDashboard) =>
+  comToken(async (t) => (await mock.categorias(t, f)).data)
 /** GET /dashboard/ranking */
 export const buscarRanking = (f: FiltrosDashboard) => comToken(async (t) => (await mock.ranking(t, f)).data)
 /** GET /dashboard/comentarios */

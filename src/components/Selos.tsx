@@ -1,10 +1,19 @@
 // Selos do painel. Cada um tem ícone + texto: a informação nunca depende só da cor.
-import { CircleAlert, Lightbulb, MessageCircle, MessageSquareWarning, ThumbsUp, TriangleAlert, type LucideIcon } from 'lucide-react'
+import {
+  CircleAlert,
+  Lightbulb,
+  MessageCircle,
+  MessageSquareWarning,
+  ThumbsUp,
+  TriangleAlert,
+  type LucideIcon,
+} from 'lucide-react'
 import type { Classificacao, TipoComentario } from '@/lib/api/tipos'
 import { ROTULO_CLASSIFICACAO, ROTULO_COMENTARIO } from '@/lib/rotulos'
 import { cn } from '@/lib/utils'
 
-const base = 'inline-flex h-6 items-center gap-1 rounded-md border px-1.5 text-xs font-medium whitespace-nowrap'
+const base =
+  'inline-flex h-6 items-center gap-1 rounded-md border px-1.5 text-xs font-medium whitespace-nowrap'
 
 const CLASSIFICACAO: Record<Classificacao, { classe: string; icone?: LucideIcon }> = {
   NORMAL: { classe: 'border-border bg-muted text-muted-foreground' },

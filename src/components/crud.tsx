@@ -11,7 +11,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { copiar } from '@/lib/salvar'
 
 /** Diálogo com um formulário: título, campos e os botões Cancelar e salvar. */
@@ -41,7 +48,9 @@ export function DialogoFormulario({
           <DialogHeader>
             <DialogTitle>{titulo}</DialogTitle>
             {/* sem descrição visível, o leitor de tela ainda recebe o título como contexto */}
-            <DialogDescription className={descricao ? undefined : 'sr-only'}>{descricao ?? titulo}</DialogDescription>
+            <DialogDescription className={descricao ? undefined : 'sr-only'}>
+              {descricao ?? titulo}
+            </DialogDescription>
           </DialogHeader>
           {children}
           <DialogFooter>
@@ -64,7 +73,9 @@ export function CampoCopiavel({ rotulo, valor }: { rotulo: string; valor: string
     <div className="grid gap-1.5">
       <span className="text-sm font-medium">{rotulo}</span>
       <div className="flex gap-2">
-        <code className="min-w-0 flex-1 rounded-lg border bg-muted px-3 py-2 text-sm break-all select-all">{valor}</code>
+        <code className="min-w-0 flex-1 rounded-lg border bg-muted px-3 py-2 text-sm break-all select-all">
+          {valor}
+        </code>
         <Button type="button" variant="outline" onClick={() => void copiar(valor, rotulo)}>
           Copiar
         </Button>

@@ -24,7 +24,8 @@ const PARTES = [
 const respostas = (total: number) => `${numero(total)} ${total === 1 ? 'resposta' : 'respostas'}`
 
 function VisaoGeral({ mes }: { mes: IndicadoresTv['mes'] }) {
-  if (mes.total === 0 || mes.nps === null) return <p className="text-[3rem] text-muted-foreground">Ainda não há respostas neste mês.</p>
+  if (mes.total === 0 || mes.nps === null)
+    return <p className="text-[3rem] text-muted-foreground">Ainda não há respostas neste mês.</p>
   const nivel = mes.mediaEscala === null ? null : nivelDaMedia(mes.mediaEscala)
   return (
     <div className="grid w-full grid-cols-[auto_1fr] items-center gap-[6rem]">
@@ -49,7 +50,11 @@ function VisaoGeral({ mes }: { mes: IndicadoresTv['mes'] }) {
         <div>
           <div className="flex h-[3.5rem] gap-[0.25rem]">
             {PARTES.map((parte) => (
-              <span key={parte.chave} className="rounded-[0.5rem]" style={{ width: `${(mes[parte.chave] / mes.total) * 100}%`, backgroundColor: parte.cor }} />
+              <span
+                key={parte.chave}
+                className="rounded-[0.5rem]"
+                style={{ width: `${(mes[parte.chave] / mes.total) * 100}%`, backgroundColor: parte.cor }}
+              />
             ))}
           </div>
           <ul className="mt-[1.25rem] flex flex-wrap gap-x-[3rem] gap-y-[0.5rem] text-[2rem]">
@@ -67,7 +72,8 @@ function VisaoGeral({ mes }: { mes: IndicadoresTv['mes'] }) {
 }
 
 function PorSetor({ setores }: { setores: IndicadoresTv['npsPorSetor'] }) {
-  if (setores.length === 0) return <p className="text-[3rem] text-muted-foreground">Ainda não há respostas neste mês.</p>
+  if (setores.length === 0)
+    return <p className="text-[3rem] text-muted-foreground">Ainda não há respostas neste mês.</p>
   const minimo = setores.some((s) => (s.nps ?? 0) < 0) ? -100 : 0
   return (
     <ul className="grid w-full gap-[2rem]">
@@ -76,7 +82,10 @@ function PorSetor({ setores }: { setores: IndicadoresTv['npsPorSetor'] }) {
         const largura = (Math.abs(nps) / (100 - minimo)) * 100
         const zero = ((0 - minimo) / (100 - minimo)) * 100
         return (
-          <li key={s.setor} className="grid grid-cols-[34rem_1fr_30rem] items-center gap-[2.5rem] text-[2.75rem]">
+          <li
+            key={s.setor}
+            className="grid grid-cols-[34rem_1fr_30rem] items-center gap-[2.5rem] text-[2.75rem]"
+          >
             <span className="truncate font-semibold">{s.setor}</span>
             <span className="relative h-[2.5rem] border-l-2 border-input">
               <span
@@ -90,7 +99,8 @@ function PorSetor({ setores }: { setores: IndicadoresTv['npsPorSetor'] }) {
               />
             </span>
             <span className="text-right">
-              <strong className="text-[3.5rem]">{npsComSinal(nps)}</strong> <span className="text-[2rem] text-muted-foreground">em {respostas(s.total)}</span>
+              <strong className="text-[3.5rem]">{npsComSinal(nps)}</strong>{' '}
+              <span className="text-[2rem] text-muted-foreground">em {respostas(s.total)}</span>
             </span>
           </li>
         )
@@ -100,7 +110,10 @@ function PorSetor({ setores }: { setores: IndicadoresTv['npsPorSetor'] }) {
 }
 
 function Destaques({ destaques }: { destaques: IndicadoresTv['destaques'] }) {
-  if (destaques.length === 0) return <p className="text-[3rem] text-muted-foreground">Ainda não há notas suficientes para os destaques.</p>
+  if (destaques.length === 0)
+    return (
+      <p className="text-[3rem] text-muted-foreground">Ainda não há notas suficientes para os destaques.</p>
+    )
   return (
     <ul className="grid w-full grid-cols-3 gap-[3rem]">
       {destaques.map((d) => {
@@ -152,7 +165,10 @@ export default function TvPage() {
 
   useEffect(() => {
     document.documentElement.classList.add('tv')
-    const troca = window.setInterval(() => setVisao((atual) => (atual + 1) % VISOES.length), SEGUNDOS_POR_VISAO * 1000)
+    const troca = window.setInterval(
+      () => setVisao((atual) => (atual + 1) % VISOES.length),
+      SEGUNDOS_POR_VISAO * 1000,
+    )
     const telaCheia = () => {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => undefined)
     }
@@ -166,7 +182,12 @@ export default function TvPage() {
 
   const telaRecusada = consulta.error instanceof ErroApi && consulta.error.status === 401
   if (token === '' || telaRecusada) {
-    return <Mensagem titulo="Esta tela não está ativa" texto="O link pode estar incompleto ou a tela foi desativada. Peça um novo link a quem administra o sistema." />
+    return (
+      <Mensagem
+        titulo="Esta tela não está ativa"
+        texto="O link pode estar incompleto ou a tela foi desativada. Peça um novo link a quem administra o sistema."
+      />
+    )
   }
   const dados = consulta.data
   if (!dados) {
@@ -185,7 +206,13 @@ export default function TvPage() {
       <header className="flex items-center justify-between gap-[2rem]">
         {/* logo sobre placa branca: o vermelho da marca continua legível no fundo escuro */}
         <span className="rounded-[0.75rem] bg-white px-[1.25rem] py-[0.75rem]">
-          <img src={logo} alt="FHDOD, Fundação Hospitalar Dr. Oswaldo Diesel" width={450} height={150} className="h-[4rem] w-auto" />
+          <img
+            src={logo}
+            alt="FHDOD, Fundação Hospitalar Dr. Oswaldo Diesel"
+            width={450}
+            height={150}
+            className="h-[4rem] w-auto"
+          />
         </span>
         <h1 className="text-[3rem] font-bold">{VISOES[visao]}</h1>
       </header>
@@ -195,8 +222,15 @@ export default function TvPage() {
         {visao === 1 && <PorSetor setores={dados.npsPorSetor} />}
         {visao === 2 && (
           <div className="w-full">
-            <GraficoEvolucao dados={dados.evolucao} granularidade="SEMANA" altura={window.innerHeight * 0.44} fonte={fonteBase * 1.5} />
-            <p className="mt-[1rem] text-[2rem] text-muted-foreground">Uma marca por semana. As colunas mostram quantas respostas cada semana teve.</p>
+            <GraficoEvolucao
+              dados={dados.evolucao}
+              granularidade="SEMANA"
+              altura={window.innerHeight * 0.44}
+              fonte={fonteBase * 1.5}
+            />
+            <p className="mt-[1rem] text-[2rem] text-muted-foreground">
+              Uma marca por semana. As colunas mostram quantas respostas cada semana teve.
+            </p>
           </div>
         )}
         {visao === 3 && <Destaques destaques={dados.destaques} />}
@@ -206,16 +240,27 @@ export default function TvPage() {
         {/* qual visão está na tela e quanto falta para a próxima */}
         <ol className="flex flex-1 gap-[0.75rem]" aria-label="Visões da tela">
           {VISOES.map((nome, i) => (
-            <li key={nome} aria-current={i === visao ? 'step' : undefined} className="h-[0.5rem] flex-1 overflow-hidden rounded-full bg-card">
+            <li
+              key={nome}
+              aria-current={i === visao ? 'step' : undefined}
+              className="h-[0.5rem] flex-1 overflow-hidden rounded-full bg-card"
+            >
               <span className="sr-only">{nome}</span>
-              {i === visao && <span key={visao} className="block h-full origin-left bg-primary" style={{ animation: `tv-progresso ${SEGUNDOS_POR_VISAO}s linear both` }} />}
+              {i === visao && (
+                <span
+                  key={visao}
+                  className="block h-full origin-left bg-primary"
+                  style={{ animation: `tv-progresso ${SEGUNDOS_POR_VISAO}s linear both` }}
+                />
+              )}
               {i < visao && <span className="block h-full bg-input" />}
             </li>
           ))}
         </ol>
         <p className={cn('flex items-center gap-[0.75rem]', consulta.isError && 'text-foreground')}>
           {consulta.isError && <WifiOff aria-hidden className="size-[2rem]" />}
-          {consulta.isError ? 'Sem conexão. Números das' : 'Atualizado às'} {hora(new Date(consulta.dataUpdatedAt))}
+          {consulta.isError ? 'Sem conexão. Números das' : 'Atualizado às'}{' '}
+          {hora(new Date(consulta.dataUpdatedAt))}
         </p>
       </footer>
     </div>

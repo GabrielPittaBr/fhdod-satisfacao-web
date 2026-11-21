@@ -86,10 +86,18 @@ function porSetor(respostas: RespostaBanco[]): NpsSetor[] {
     .sort((a, b) => (b.nps ?? -101) - (a.nps ?? -101))
 }
 
-function evoluir(respostas: RespostaBanco[], f: FiltrosDashboard, granularidade: Granularidade): PontoEvolucao[] {
+function evoluir(
+  respostas: RespostaBanco[],
+  f: FiltrosDashboard,
+  granularidade: Granularidade,
+): PontoEvolucao[] {
   const intervalo = { start: parseISO(f.inicio), end: parseISO(f.fim) }
   const inicioDoPeriodo = (data: Date) =>
-    granularidade === 'DIA' ? data : granularidade === 'SEMANA' ? startOfWeek(data, { weekStartsOn: 1 }) : startOfMonth(data)
+    granularidade === 'DIA'
+      ? data
+      : granularidade === 'SEMANA'
+        ? startOfWeek(data, { weekStartsOn: 1 })
+        : startOfMonth(data)
   const periodos =
     granularidade === 'DIA'
       ? eachDayOfInterval(intervalo)
@@ -134,13 +142,17 @@ function porCategoria(respostas: RespostaBanco[]): IndicadorCategoria[] {
     .sort((a, b) => a.ordem - b.ordem)
     .map((categoria) => {
       const notas = respostas.flatMap((r) =>
-        r.itens.flatMap((i) => (i.categoriaId === categoria.id && i.valorNumero !== null ? [i.valorNumero] : [])),
+        r.itens.flatMap((i) =>
+          i.categoriaId === categoria.id && i.valorNumero !== null ? [i.valorNumero] : [],
+        ),
       )
       return {
         categoriaId: categoria.id,
         categoria: categoria.nome,
         media: media(notas),
-        percentual45: notas.length ? Math.round((notas.filter((n) => n >= 4).length / notas.length) * 100) : null,
+        percentual45: notas.length
+          ? Math.round((notas.filter((n) => n >= 4).length / notas.length) * 100)
+          : null,
         total: notas.length,
       }
     })
@@ -162,7 +174,8 @@ function destaquesPorSetor(respostas: RespostaBanco[]): IndicadoresTv['destaques
     .filter((p) => p.total >= 5)
     .sort((a, b) => b.media - a.media || b.total - a.total)
   for (const { setor, categoria, media, percentual45 } of pontos) {
-    if (destaques.length < 3 && !destaques.some((d) => d.setor === setor)) destaques.push({ setor, categoria, media, percentual45 })
+    if (destaques.length < 3 && !destaques.some((d) => d.setor === setor))
+      destaques.push({ setor, categoria, media, percentual45 })
   }
   return destaques
 }
@@ -187,13 +200,20 @@ export async function npsPorSetor(token: string, f: FiltrosDashboard): Promise<E
 }
 
 /** GET /dashboard/evolucao */
-export async function evolucao(token: string, f: FiltrosDashboard, granularidade: Granularidade): Promise<Envelope<PontoEvolucao[]>> {
+export async function evolucao(
+  token: string,
+  f: FiltrosDashboard,
+  granularidade: Granularidade,
+): Promise<Envelope<PontoEvolucao[]>> {
   await rede()
   return { data: evoluir(filtrar(contextoDoDashboard(token, f).setorIds, f), f, granularidade) }
 }
 
 /** GET /dashboard/categorias */
-export async function categorias(token: string, f: FiltrosDashboard): Promise<Envelope<IndicadorCategoria[]>> {
+export async function categorias(
+  token: string,
+  f: FiltrosDashboard,
+): Promise<Envelope<IndicadorCategoria[]>> {
   await rede()
   return { data: porCategoria(filtrar(contextoDoDashboard(token, f).setorIds, f)) }
 }
@@ -295,7 +315,11 @@ export async function buscarResposta(token: string, id: number): Promise<Envelop
       })),
       comentario: r.comentario,
       // telefone sempre mascarado aqui; o número completo só em "revelar telefone"
-      contato: r.contato && { id: r.contato.id, telefoneMascarado: mascararTelefone(r.contato.telefone), status: 'NOVO' },
+      contato: r.contato && {
+        id: r.contato.id,
+        telefoneMascarado: mascararTelefone(r.contato.telefone),
+        status: 'NOVO',
+      },
     },
   }
 }
@@ -308,20 +332,18 @@ export async function listarContatos(token: string): Promise<Lista<PedidoRetorno
   const pedidos = filtrar(contexto.setorIds, {})
     .filter((r) => r.contato)
     .sort((a, b) => b.contato!.consentimentoEm.localeCompare(a.contato!.consentimentoEm))
-    .map(
-      (r): PedidoRetorno => ({
-        id: r.contato!.id,
-        respostaId: r.id,
-        setor: nomeDoSetor(r.setorId),
-        dataAtendimento: r.dataAtendimento,
-        nps: r.nps,
-        classificacao: r.classificacao,
-        comentario: r.comentario,
-        telefoneMascarado: mascararTelefone(r.contato!.telefone),
-        consentimentoEm: r.contato!.consentimentoEm,
-        status: 'NOVO',
-      }),
-    )
+    .map((r): PedidoRetorno => ({
+      id: r.contato!.id,
+      respostaId: r.id,
+      setor: nomeDoSetor(r.setorId),
+      dataAtendimento: r.dataAtendimento,
+      nps: r.nps,
+      classificacao: r.classificacao,
+      comentario: r.comentario,
+      telefoneMascarado: mascararTelefone(r.contato!.telefone),
+      consentimentoEm: r.contato!.consentimentoEm,
+      status: 'NOVO',
+    }))
   return { data: pedidos, meta: { pagina: 1, porPagina: pedidos.length, total: pedidos.length } }
 }
 
@@ -332,7 +354,12 @@ export async function revelarTelefone(token: string, id: number): Promise<Envelo
   exigir(contexto, 'contatos:ver')
   const resposta = todasAsRespostas().find((r) => r.contato?.id === id)
   if (!resposta?.contato) throw erros.naoEncontrado('Pedido de retorno não encontrado.')
-  banco.auditoria.push({ em: new Date().toISOString(), usuarioId: contexto.usuario.id, acao: 'contato.revelar_telefone', entidadeId: id })
+  banco.auditoria.push({
+    em: new Date().toISOString(),
+    usuarioId: contexto.usuario.id,
+    acao: 'contato.revelar_telefone',
+    entidadeId: id,
+  })
   salvar()
   return { data: { telefone: resposta.contato.telefone } }
 }
@@ -355,7 +382,10 @@ const descreverFiltros = (f: FiltrosDashboard) => [
 ]
 
 /** GET /exportacoes/resumo.xlsx */
-export async function exportarResumo(token: string, f: FiltrosDashboard): Promise<{ nomeArquivo: string; conteudo: string }> {
+export async function exportarResumo(
+  token: string,
+  f: FiltrosDashboard,
+): Promise<{ nomeArquivo: string; conteudo: string }> {
   await rede()
   const contexto = contextoDoDashboard(token, f)
   exigir(contexto, 'exportacao:resumo')
@@ -386,7 +416,10 @@ export async function exportarResumo(token: string, f: FiltrosDashboard): Promis
 }
 
 /** GET /exportacoes/respostas.xlsx */
-export async function exportarRespostas(token: string, f: FiltrosDashboard): Promise<{ nomeArquivo: string; conteudo: string }> {
+export async function exportarRespostas(
+  token: string,
+  f: FiltrosDashboard,
+): Promise<{ nomeArquivo: string; conteudo: string }> {
   await rede()
   const contexto = contextoDoDashboard(token, f)
   exigir(contexto, 'exportacao:detalhada')
@@ -394,13 +427,31 @@ export async function exportarRespostas(token: string, f: FiltrosDashboard): Pro
   const comTelefone = contexto.permissoes.includes('contatos:ver')
   const respostas = filtrar(contexto.setorIds, f).sort((a, b) => b.enviadoEm.localeCompare(a.enviadoEm))
   if (comTelefone) {
-    banco.auditoria.push({ em: new Date().toISOString(), usuarioId: contexto.usuario.id, acao: 'exportacao.respostas_com_telefone', entidadeId: 0 })
+    banco.auditoria.push({
+      em: new Date().toISOString(),
+      usuarioId: contexto.usuario.id,
+      acao: 'exportacao.respostas_com_telefone',
+      entidadeId: 0,
+    })
     salvar()
   }
   return {
     nomeArquivo: `fhdod-respostas-${f.inicio}-a-${f.fim}.csv`,
     conteudo: csv([
-      ['Código', 'Setor', 'Data do atendimento', 'Turno', 'Canal', 'Enviada em', 'Nota de recomendação (0 a 10)', 'Classificação', 'Notas de 1 a 5', 'Tipo do comentário', 'Comentário', ...(comTelefone ? ['Telefone para retorno'] : [])],
+      [
+        'Código',
+        'Setor',
+        'Data do atendimento',
+        'Turno',
+        'Canal',
+        'Enviada em',
+        'Nota de recomendação (0 a 10)',
+        'Classificação',
+        'Notas de 1 a 5',
+        'Tipo do comentário',
+        'Comentário',
+        ...(comTelefone ? ['Telefone para retorno'] : []),
+      ],
       ...respostas.map((r) => [
         r.id,
         nomeDoSetor(r.setorId),
@@ -410,7 +461,11 @@ export async function exportarRespostas(token: string, f: FiltrosDashboard): Pro
         format(new Date(r.enviadoEm), 'yyyy-MM-dd HH:mm'),
         r.nps,
         r.classificacao,
-        r.itens.flatMap((i) => (i.valorNumero === null ? [] : [`${nomeDaCategoria(i.categoriaId)}: ${i.valorNumero}`])).join(' | '),
+        r.itens
+          .flatMap((i) =>
+            i.valorNumero === null ? [] : [`${nomeDaCategoria(i.categoriaId)}: ${i.valorNumero}`],
+          )
+          .join(' | '),
         r.comentario?.tipo ?? '',
         r.comentario?.texto ?? '',
         ...(comTelefone ? [r.contato?.telefone ?? ''] : []),
@@ -435,7 +490,11 @@ export async function indicadoresTv(tokenDaTela: string): Promise<Envelope<Indic
 
   const hoje = iso(agora)
   const doMes = filtrar(null, { inicio: iso(startOfMonth(agora)), fim: hoje })
-  const semanas: FiltrosDashboard = { inicio: iso(startOfWeek(subDays(agora, 77), { weekStartsOn: 1 })), fim: hoje, base: 'ATENDIMENTO' }
+  const semanas: FiltrosDashboard = {
+    inicio: iso(startOfWeek(subDays(agora, 77), { weekStartsOn: 1 })),
+    fim: hoje,
+    base: 'ATENDIMENTO',
+  }
   const { nps, total, promotores, neutros, detratores, mediaEscala } = resumir(doMes)
 
   return {

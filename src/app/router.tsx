@@ -22,7 +22,9 @@ const ExigeSessao = lazy(() => import('./guards').then((m) => ({ default: m.Exig
 const ExigePermissao = lazy(() => import('./guards').then((m) => ({ default: m.ExigePermissao })))
 
 /** O acesso depende da lista de permissões do /auth/me (basta uma delas), não do nome do perfil. */
-const com = (permissoes: Permissao[], pagina: ReactNode) => <ExigePermissao permissoes={permissoes}>{pagina}</ExigePermissao>
+const com = (permissoes: Permissao[], pagina: ReactNode) => (
+  <ExigePermissao permissoes={permissoes}>{pagina}</ExigePermissao>
+)
 
 export const router = createBrowserRouter([
   {
@@ -46,9 +48,15 @@ export const router = createBrowserRouter([
               { path: 'respostas', element: com(['respostas:ver'], <RespostasPage />) },
               { path: 'contatos', element: com(['contatos:ver'], <ContatosPage />) },
               // o gestor entra aqui só para chegar às perguntas e ao QR Code dos seus setores
-              { path: 'setores', element: com(['setores:gerenciar', 'perguntas:gerenciar'], <SetoresPage />) },
+              {
+                path: 'setores',
+                element: com(['setores:gerenciar', 'perguntas:gerenciar'], <SetoresPage />),
+              },
               { path: 'setores/:id/perguntas', element: com(['perguntas:gerenciar'], <PerguntasPage />) },
-              { path: 'cadastros', element: com(['categorias:gerenciar', 'turnos:gerenciar'], <CadastrosPage />) },
+              {
+                path: 'cadastros',
+                element: com(['categorias:gerenciar', 'turnos:gerenciar'], <CadastrosPage />),
+              },
               { path: 'usuarios', element: com(['usuarios:gerenciar'], <UsuariosPage />) },
               { path: 'tv', element: com(['tvwall:gerenciar'], <TelasTvPage />) },
               { path: '*', element: <NaoEncontrada /> },

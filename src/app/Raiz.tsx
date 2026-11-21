@@ -23,7 +23,10 @@ export function NaoEncontrada() {
         </Link>
       }
     >
-      <p>Este endereço não existe. Se você veio avaliar o atendimento, aponte a câmera de novo para o QR Code do setor.</p>
+      <p>
+        Este endereço não existe. Se você veio avaliar o atendimento, aponte a câmera de novo para o QR Code
+        do setor.
+      </p>
     </TelaMensagem>
   )
 }

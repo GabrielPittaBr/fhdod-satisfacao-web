@@ -4,7 +4,11 @@ import { BotaoPrincipal } from './botoes'
 import { Titulo } from './Moldura'
 
 /** Fim da pesquisa: deixa claro que a avaliação foi enviada. No totem, reinicia sozinha. */
-export function TelaAgradecimento({ reinicio }: { reinicio?: { segundos: number; aoReiniciar: () => void } }) {
+export function TelaAgradecimento({
+  reinicio,
+}: {
+  reinicio?: { segundos: number; aoReiniciar: () => void }
+}) {
   return (
     <div className="flex flex-1 flex-col justify-center">
       <CircleCheck aria-hidden className="size-20 text-primary" strokeWidth={1.75} />
