@@ -1,0 +1,48 @@
+# Verificações de todo pull request e de cada push na develop e na main:
+# lint, tipos, testes e build, os mesmos passos da definição de pronto do AGENTS.md.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+# Um push novo no mesmo PR cancela a verificação anterior.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Lint, tipos, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # A versão do pnpm vem do packageManager, no package.json.
+      - uses: pnpm/action-setup@v6
+
+      # A versão do Node vem do .nvmrc; o cache guarda o store do pnpm entre as execuções.
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalação
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Tipos
+        run: pnpm typecheck
+
+      - name: Testes
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
