@@ -20,7 +20,9 @@ import { alterarStatusSetor, criarSetor, editarSetor, listarSetores } from '../a
 
 const esquema = z.object({
   nome: z.string().trim().min(2, 'Informe o nome do setor'),
-  slug: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use só letras minúsculas, números e hífen, sem espaços'),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use só letras minúsculas, números e hífen, sem espaços'),
   descricao: z.string().trim().max(120, 'Use no máximo 120 caracteres'),
 })
 type Dados = z.infer<typeof esquema>
@@ -55,7 +57,11 @@ function Formulario({ setor, aoFechar }: { setor: Setor | null; aoFechar: () => 
       aberto
       aoFechar={aoFechar}
       titulo={setor ? `Editar ${setor.nome}` : 'Novo setor'}
-      descricao={setor ? 'Mudar o endereço invalida os QR Codes já impressos deste setor.' : 'Cada setor tem a sua pesquisa, com link e QR Code próprios.'}
+      descricao={
+        setor
+          ? 'Mudar o endereço invalida os QR Codes já impressos deste setor.'
+          : 'Cada setor tem a sua pesquisa, com link e QR Code próprios.'
+      }
       rotuloSalvar={setor ? 'Salvar setor' : 'Criar setor'}
       salvando={salvar.isPending}
       aoEnviar={form.handleSubmit((dados) => salvar.mutate(dados))}
@@ -67,7 +73,8 @@ function Formulario({ setor, aoFechar }: { setor: Setor | null; aoFechar: () => 
         onChange={(evento) => {
           void nome.onChange(evento)
           // ao criar, o endereço acompanha o nome até a pessoa mexer nele
-          if (!setor && !form.formState.dirtyFields.slug) form.setValue('slug', paraEndereco(evento.target.value))
+          if (!setor && !form.formState.dirtyFields.slug)
+            form.setValue('slug', paraEndereco(evento.target.value))
         }}
       />
       <CampoTexto
@@ -78,7 +85,11 @@ function Formulario({ setor, aoFechar }: { setor: Setor | null; aoFechar: () => 
         erro={erros.slug?.message}
         {...form.register('slug')}
       />
-      <CampoTexto rotulo="Descrição (opcional)" erro={erros.descricao?.message} {...form.register('descricao')} />
+      <CampoTexto
+        rotulo="Descrição (opcional)"
+        erro={erros.descricao?.message}
+        {...form.register('descricao')}
+      />
       <ErroDoFormulario mensagem={erros.root?.message} />
     </DialogoFormulario>
   )
@@ -92,12 +103,19 @@ function LinksDoSetor({ setor, aoFechar }: { setor: Setor; aoFechar: () => void 
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Links e QR Code: {setor.nome}</DialogTitle>
-          <DialogDescription>O QR Code leva direto à pesquisa deste setor, sem cadastro nem senha.</DialogDescription>
+          <DialogDescription>
+            O QR Code leva direto à pesquisa deste setor, sem cadastro nem senha.
+          </DialogDescription>
         </DialogHeader>
         <CampoCopiavel rotulo="Link da pesquisa" valor={pesquisa} />
         <CampoCopiavel rotulo="Link do totem" valor={`${window.location.origin}/totem/${setor.slug}`} />
         <div className="flex flex-col items-center gap-3 rounded-lg border p-4">
-          <QRCodeSVG value={pesquisa} size={176} marginSize={2} title={`QR Code da pesquisa do setor ${setor.nome}`} />
+          <QRCodeSVG
+            value={pesquisa}
+            size={176}
+            marginSize={2}
+            title={`QR Code da pesquisa do setor ${setor.nome}`}
+          />
           <Button onClick={() => window.print()}>
             <Printer aria-hidden />
             Imprimir folha com o QR Code
@@ -148,15 +166,25 @@ export default function SetoresPage() {
       }
     >
       <Bloco>
-        <Consulta consulta={consulta} altura="h-72" vazio={(setores) => setores.length === 0} textoVazio="Você ainda não tem setores vinculados. Fale com quem administra o sistema.">
+        <Consulta
+          consulta={consulta}
+          altura="h-72"
+          vazio={(setores) => setores.length === 0}
+          textoVazio="Você ainda não tem setores vinculados. Fale com quem administra o sistema."
+        >
           {(setores) => (
             <ul className="grid gap-3">
               {setores.map((setor) => (
-                <li key={setor.id} className="grid gap-3 rounded-lg border p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                <li
+                  key={setor.id}
+                  className="grid gap-3 rounded-lg border p-4 lg:grid-cols-[1fr_auto] lg:items-center"
+                >
                   <div className="min-w-0">
                     <h2 className="flex flex-wrap items-center gap-2 font-semibold">
                       {setor.nome}
-                      <span className={`rounded-md border px-1.5 text-xs leading-6 font-medium ${setor.ativo ? 'border-input/50' : 'border-aviso-borda bg-aviso-fundo text-aviso'}`}>
+                      <span
+                        className={`rounded-md border px-1.5 text-xs leading-6 font-medium ${setor.ativo ? 'border-input/50' : 'border-aviso-borda bg-aviso-fundo text-aviso'}`}
+                      >
                         {setor.ativo ? 'Ativo' : 'Inativo: pesquisa pausada'}
                       </span>
                     </h2>
@@ -182,7 +210,11 @@ export default function SetoresPage() {
                           <Pencil aria-hidden />
                           Editar
                         </Button>
-                        <Button variant="outline" disabled={status.isPending} onClick={() => status.mutate({ id: setor.id, ativo: !setor.ativo })}>
+                        <Button
+                          variant="outline"
+                          disabled={status.isPending}
+                          onClick={() => status.mutate({ id: setor.id, ativo: !setor.ativo })}
+                        >
                           {setor.ativo ? 'Desativar' : 'Ativar'}
                         </Button>
                       </>
@@ -195,7 +227,9 @@ export default function SetoresPage() {
         </Consulta>
       </Bloco>
 
-      {editando && <Formulario setor={editando === 'novo' ? null : editando} aoFechar={() => setEditando(null)} />}
+      {editando && (
+        <Formulario setor={editando === 'novo' ? null : editando} aoFechar={() => setEditando(null)} />
+      )}
       {links && <LinksDoSetor setor={links} aoFechar={() => setLinks(null)} />}
     </Pagina>
   )

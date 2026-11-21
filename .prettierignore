@@ -1,0 +1,3 @@
+# Documentação escrita à mão: o Prettier realinharia as tabelas a cada edição.
+*.md
+pnpm-lock.yaml

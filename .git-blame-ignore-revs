@@ -1,0 +1,5 @@
+# Commits só de formatação, que o git blame do GitHub pula.
+# Para o git blame da máquina pular também: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: código formatado com o prettier
+f9c108cce4c2d7e4710e788e9858c538755f40e3

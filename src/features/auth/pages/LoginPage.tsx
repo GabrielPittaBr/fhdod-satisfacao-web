@@ -15,7 +15,10 @@ export default function LoginPage() {
   const navegar = useNavigate()
   const destino = (useLocation().state as { de?: string } | null)?.de ?? '/painel'
   const logado = useSessao((s) => s.sessao !== null)
-  const form = useForm<DadosLogin>({ resolver: zodResolver(loginSchema), defaultValues: { email: '', senha: '' } })
+  const form = useForm<DadosLogin>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', senha: '' },
+  })
 
   const login = useMutation({
     mutationFn: (dados: DadosLogin) => entrar(dados.email, dados.senha),
@@ -28,11 +31,23 @@ export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-5 py-10">
       <title>Entrar no painel | FHDOD</title>
-      <img src={logo} alt="FHDOD, Fundação Hospitalar Dr. Oswaldo Diesel" width={450} height={150} className="h-12 w-auto self-start" />
+      <img
+        src={logo}
+        alt="FHDOD, Fundação Hospitalar Dr. Oswaldo Diesel"
+        width={450}
+        height={150}
+        className="h-12 w-auto self-start"
+      />
       <h1 className="mt-8 text-2xl font-bold">Painel da pesquisa de satisfação</h1>
-      <p className="mt-1 text-muted-foreground">Entre com o e-mail e a senha que o hospital criou para você.</p>
+      <p className="mt-1 text-muted-foreground">
+        Entre com o e-mail e a senha que o hospital criou para você.
+      </p>
 
-      <form noValidate className="mt-6 grid gap-4" onSubmit={form.handleSubmit((dados) => login.mutate(dados))}>
+      <form
+        noValidate
+        className="mt-6 grid gap-4"
+        onSubmit={form.handleSubmit((dados) => login.mutate(dados))}
+      >
         <CampoTexto
           rotulo="E-mail"
           type="email"
@@ -86,7 +101,10 @@ function AcessosDemo({ ocupado, aoEscolher }: { ocupado: boolean; aoEscolher: (d
       <ul className="mt-4 grid gap-1 text-sm">
         {demo.links.map((link) => (
           <li key={link.url}>
-            <Link to={link.url} className="inline-flex min-h-9 items-center font-semibold text-primary underline underline-offset-4 hover:no-underline">
+            <Link
+              to={link.url}
+              className="inline-flex min-h-9 items-center font-semibold text-primary underline underline-offset-4 hover:no-underline"
+            >
               {link.rotulo}
             </Link>
           </li>

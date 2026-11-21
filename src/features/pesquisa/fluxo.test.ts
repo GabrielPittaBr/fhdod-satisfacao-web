@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import type { RespostaCriada } from '@/lib/api/tipos'
-import { estadoInicial, montarEnvio, novaChave, progresso, redutor, turnoDoHorario, type AcaoFluxo, type EstadoFluxo } from './fluxo'
+import {
+  estadoInicial,
+  montarEnvio,
+  novaChave,
+  progresso,
+  redutor,
+  turnoDoHorario,
+  type AcaoFluxo,
+  type EstadoFluxo,
+} from './fluxo'
 
 const aplicar = (estado: EstadoFluxo, ...acoes: AcaoFluxo[]) => acoes.reduce(redutor, estado)
 const criada = (classificacao: RespostaCriada['classificacao']): RespostaCriada => ({
@@ -51,7 +60,14 @@ describe('etapas da pesquisa', () => {
   })
 
   it('aceita pular todas as perguntas e responder só a nota', () => {
-    const e = aplicar(inicio(), ...ateAsPerguntas, { tipo: 'PULAR' }, { tipo: 'PULAR' }, { tipo: 'PULAR' }, { tipo: 'SELECIONAR_NPS', nps: 0 })
+    const e = aplicar(
+      inicio(),
+      ...ateAsPerguntas,
+      { tipo: 'PULAR' },
+      { tipo: 'PULAR' },
+      { tipo: 'PULAR' },
+      { tipo: 'SELECIONAR_NPS', nps: 0 },
+    )
     expect(montarEnvio(e, 'WEB')).toMatchObject({ itens: [], nps: 0 })
   })
 
@@ -78,7 +94,10 @@ describe('etapas da pesquisa', () => {
   })
 
   it('ignora resposta de uma pergunta que não é a atual (toque atrasado)', () => {
-    const e = aplicar(inicio(), ...ateAsPerguntas, { tipo: 'RESPONDER', item: { perguntaId: 13, valorNumero: 3 } })
+    const e = aplicar(inicio(), ...ateAsPerguntas, {
+      tipo: 'RESPONDER',
+      item: { perguntaId: 13, valorNumero: 3 },
+    })
     expect([e.indice, e.respostas]).toEqual([0, {}])
   })
 })
@@ -102,20 +121,43 @@ describe('nota de recomendação obrigatória', () => {
   })
 
   it('o caminho depois do envio depende da classificação que a API devolve', () => {
-    const naNota = aplicar(inicio(), ...ateAsPerguntas, { tipo: 'PULAR' }, { tipo: 'PULAR' }, { tipo: 'PULAR' }, { tipo: 'SELECIONAR_NPS', nps: 3 })
+    const naNota = aplicar(
+      inicio(),
+      ...ateAsPerguntas,
+      { tipo: 'PULAR' },
+      { tipo: 'PULAR' },
+      { tipo: 'PULAR' },
+      { tipo: 'SELECIONAR_NPS', nps: 3 },
+    )
     const comentario = { tipo: 'RECLAMACAO', texto: 'Demorou' } as const
 
-    const baixa = aplicar(naNota, { tipo: 'ENVIADA', criada: criada('BAIXA') }, { tipo: 'COMENTAR', comentario })
+    const baixa = aplicar(
+      naNota,
+      { tipo: 'ENVIADA', criada: criada('BAIXA') },
+      { tipo: 'COMENTAR', comentario },
+    )
     expect([baixa.etapa, baixa.comentario]).toEqual(['contato', comentario])
 
     // avaliação normal não passa pela tela do telefone
-    const normal = aplicar(naNota, { tipo: 'ENVIADA', criada: criada('NORMAL') }, { tipo: 'COMENTAR', comentario })
+    const normal = aplicar(
+      naNota,
+      { tipo: 'ENVIADA', criada: criada('NORMAL') },
+      { tipo: 'COMENTAR', comentario },
+    )
     expect(normal.etapa).toBe('comentario')
     expect(redutor(normal, { tipo: 'CONCLUIR' }).etapa).toBe('agradecimento')
   })
 
   it('depois de enviada, não dá para voltar e mudar a nota', () => {
-    const e = aplicar(inicio(), ...ateAsPerguntas, { tipo: 'PULAR' }, { tipo: 'PULAR' }, { tipo: 'PULAR' }, { tipo: 'SELECIONAR_NPS', nps: 8 }, { tipo: 'ENVIADA', criada: criada('NORMAL') })
+    const e = aplicar(
+      inicio(),
+      ...ateAsPerguntas,
+      { tipo: 'PULAR' },
+      { tipo: 'PULAR' },
+      { tipo: 'PULAR' },
+      { tipo: 'SELECIONAR_NPS', nps: 8 },
+      { tipo: 'ENVIADA', criada: criada('NORMAL') },
+    )
     expect(redutor(e, { tipo: 'VOLTAR' })).toBe(e)
     expect(redutor(e, { tipo: 'SELECIONAR_NPS', nps: 1 })).toBe(e)
   })
@@ -134,11 +176,16 @@ describe('reinício (totem)', () => {
       { tipo: 'COMENTAR', comentario: { tipo: 'RECLAMACAO', texto: 'Esperei muito' } },
     )
     expect(usado.etapa).toBe('contato')
-    expect(redutor(usado, { tipo: 'REINICIAR', chaveIdempotencia: 'chave-2' })).toEqual(estadoInicial([11, 12, 13], 'chave-2'))
+    expect(redutor(usado, { tipo: 'REINICIAR', chaveIdempotencia: 'chave-2' })).toEqual(
+      estadoInicial([11, 12, 13], 'chave-2'),
+    )
   })
 
   it('no totem a pesquisa começa direto nas perguntas, com data e turno prontos', () => {
-    const e = aplicar(inicio(), { tipo: 'COMECAR', atendimento: { dataAtendimento: '2026-11-10', turnoId: 3 } })
+    const e = aplicar(inicio(), {
+      tipo: 'COMECAR',
+      atendimento: { dataAtendimento: '2026-11-10', turnoId: 3 },
+    })
     expect([e.etapa, e.dataAtendimento, e.turnoId]).toEqual(['pergunta', '2026-11-10', 3])
     expect(redutor(e, { tipo: 'VOLTAR' }).etapa).toBe('abertura')
   })
@@ -164,7 +211,9 @@ describe('apoio', () => {
       { id: 3, horaInicio: '19:00', horaFim: '07:00' },
     ]
     const as = (h: number, m = 0) => turnoDoHorario(turnos, new Date(2026, 10, 10, h, m))
-    expect([as(7), as(12, 59), as(13), as(18, 59), as(19), as(23, 59), as(0), as(6, 59)]).toEqual([1, 1, 2, 2, 3, 3, 3, 3])
+    expect([as(7), as(12, 59), as(13), as(18, 59), as(19), as(23, 59), as(0), as(6, 59)]).toEqual([
+      1, 1, 2, 2, 3, 3, 3, 3,
+    ])
   })
 
   it('gera chaves diferentes no formato UUID', () => {

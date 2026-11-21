@@ -8,7 +8,14 @@ import { CampoCopiavel, DialogoFormulario } from '@/components/crud'
 import { CampoTexto, ErroDoFormulario } from '@/components/formulario'
 import { Bloco, Consulta, Pagina } from '@/components/layout/Pagina'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { dataHora } from '@/lib/format'
 import { aplicarErroDaApi, useSalvar } from '@/lib/salvar'
 import { cn } from '@/lib/utils'
@@ -17,7 +24,13 @@ import { alterarStatusTela, criarTela, listarTelas } from '../api'
 const esquema = z.object({ nome: z.string().trim().min(2, 'Informe onde a tela fica') })
 type Dados = z.infer<typeof esquema>
 
-function Formulario({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (tela: { nome: string; link: string }) => void }) {
+function Formulario({
+  aoFechar,
+  aoCriar,
+}: {
+  aoFechar: () => void
+  aoCriar: (tela: { nome: string; link: string }) => void
+}) {
   const form = useForm<Dados>({ resolver: zodResolver(esquema), defaultValues: { nome: '' } })
   const salvar = useSalvar((d: Dados) => criarTela(d.nome), {
     recarregar: ['tv-telas'],
@@ -38,7 +51,12 @@ function Formulario({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (tel
       salvando={salvar.isPending}
       aoEnviar={form.handleSubmit((d) => salvar.mutate(d))}
     >
-      <CampoTexto rotulo="Onde a tela fica" dica="Exemplo: Recepção principal" erro={form.formState.errors.nome?.message} {...form.register('nome')} />
+      <CampoTexto
+        rotulo="Onde a tela fica"
+        dica="Exemplo: Recepção principal"
+        erro={form.formState.errors.nome?.message}
+        {...form.register('nome')}
+      />
       <ErroDoFormulario mensagem={form.formState.errors.root?.message} />
     </DialogoFormulario>
   )
@@ -66,21 +84,45 @@ export default function TelasTvPage() {
       }
     >
       <Bloco>
-        <Consulta consulta={consulta} altura="h-40" vazio={(telas) => telas.length === 0} textoVazio="Nenhuma tela criada. Crie uma para gerar o link da TV.">
+        <Consulta
+          consulta={consulta}
+          altura="h-40"
+          vazio={(telas) => telas.length === 0}
+          textoVazio="Nenhuma tela criada. Crie uma para gerar o link da TV."
+        >
           {(telas) => (
             <ul className="grid gap-3">
               {telas.map((tela) => (
-                <li key={tela.id} className={cn('flex flex-wrap items-center gap-3 rounded-lg border p-4', !tela.ativa && 'bg-muted')}>
+                <li
+                  key={tela.id}
+                  className={cn(
+                    'flex flex-wrap items-center gap-3 rounded-lg border p-4',
+                    !tela.ativa && 'bg-muted',
+                  )}
+                >
                   <div className="min-w-0 flex-1 basis-56">
                     <h2 className="flex flex-wrap items-center gap-2 font-semibold">
                       {tela.nome}
-                      <span className={cn('rounded-md border px-1.5 text-xs leading-6 font-medium', tela.ativa ? 'border-input/50' : 'border-aviso-borda bg-aviso-fundo text-aviso')}>
+                      <span
+                        className={cn(
+                          'rounded-md border px-1.5 text-xs leading-6 font-medium',
+                          tela.ativa ? 'border-input/50' : 'border-aviso-borda bg-aviso-fundo text-aviso',
+                        )}
+                      >
                         {tela.ativa ? 'Ativa' : 'Desativada: o link não abre'}
                       </span>
                     </h2>
-                    <p className="text-sm text-muted-foreground">{tela.ultimoAcessoEm ? `Último acesso em ${dataHora(tela.ultimoAcessoEm)}.` : 'Ainda não foi aberta em nenhuma TV.'}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {tela.ultimoAcessoEm
+                        ? `Último acesso em ${dataHora(tela.ultimoAcessoEm)}.`
+                        : 'Ainda não foi aberta em nenhuma TV.'}
+                    </p>
                   </div>
-                  <Button variant="outline" disabled={status.isPending} onClick={() => status.mutate({ id: tela.id, ativa: !tela.ativa })}>
+                  <Button
+                    variant="outline"
+                    disabled={status.isPending}
+                    onClick={() => status.mutate({ id: tela.id, ativa: !tela.ativa })}
+                  >
                     {tela.ativa ? 'Desativar' : 'Ativar de novo'}
                   </Button>
                 </li>
@@ -96,7 +138,10 @@ export default function TelasTvPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Link da tela {criada?.nome}</DialogTitle>
-            <DialogDescription>Copie agora e abra no navegador da TV: este link não aparece de novo. Se perder, desative esta tela e crie outra.</DialogDescription>
+            <DialogDescription>
+              Copie agora e abra no navegador da TV: este link não aparece de novo. Se perder, desative esta
+              tela e crie outra.
+            </DialogDescription>
           </DialogHeader>
           {criada && <CampoCopiavel rotulo="Link da TV" valor={criada.link} />}
           <DialogFooter>

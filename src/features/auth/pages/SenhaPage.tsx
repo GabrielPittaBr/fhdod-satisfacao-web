@@ -29,7 +29,13 @@ export default function SenhaPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-5 py-10">
       <title>Trocar senha | FHDOD</title>
-      <img src={logo} alt="FHDOD, Fundação Hospitalar Dr. Oswaldo Diesel" width={450} height={150} className="h-12 w-auto self-start" />
+      <img
+        src={logo}
+        alt="FHDOD, Fundação Hospitalar Dr. Oswaldo Diesel"
+        width={450}
+        height={150}
+        className="h-12 w-auto self-start"
+      />
       <h1 className="mt-8 text-2xl font-bold">{obrigatoria ? 'Crie a sua senha' : 'Trocar senha'}</h1>
       <p className="mt-1 text-muted-foreground">
         {obrigatoria
@@ -37,7 +43,11 @@ export default function SenhaPage() {
           : 'Depois da troca, os outros aparelhos em que você entrou pedem a senha de novo.'}
       </p>
 
-      <form noValidate className="mt-6 grid gap-4" onSubmit={form.handleSubmit((dados) => troca.mutate(dados))}>
+      <form
+        noValidate
+        className="mt-6 grid gap-4"
+        onSubmit={form.handleSubmit((dados) => troca.mutate(dados))}
+      >
         <CampoTexto
           rotulo={obrigatoria ? 'Senha provisória' : 'Senha atual'}
           type="password"

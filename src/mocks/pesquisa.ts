@@ -1,5 +1,12 @@
 import { format } from 'date-fns'
-import type { Complemento, DetalheErro, Envelope, EnvioResposta, PesquisaPublica, RespostaCriada } from '@/lib/api/tipos'
+import type {
+  Complemento,
+  DetalheErro,
+  Envelope,
+  EnvioResposta,
+  PesquisaPublica,
+  RespostaCriada,
+} from '@/lib/api/tipos'
 import { banco, proximoId, salvar, type RespostaBanco } from './banco'
 import { classificarResposta, type Limites } from './regras'
 import { erros, falha, rede, tokenAleatorio } from './rede'
@@ -40,7 +47,10 @@ export async function buscarPesquisa(slug: string): Promise<Envelope<PesquisaPub
         .map(({ id, nome, horaInicio, horaFim }) => ({ id, nome, horaInicio, horaFim })),
       npsTexto: c.nps_texto,
       textoLimiteCaracteres: c.texto_limite_caracteres,
-      totem: { reinicioSegundos: c.totem_reinicio_segundos, inatividadeSegundos: c.totem_inatividade_segundos },
+      totem: {
+        reinicioSegundos: c.totem_reinicio_segundos,
+        inatividadeSegundos: c.totem_inatividade_segundos,
+      },
     },
   }
 }
@@ -67,7 +77,10 @@ export async function enviarResposta(slug: string, corpo: EnvioResposta): Promis
   if (!Number.isInteger(corpo.nps) || corpo.nps < 0 || corpo.nps > 10) {
     detalhes.push({ campo: 'nps', mensagem: 'Obrigatório, de 0 a 10' })
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(corpo.dataAtendimento) || corpo.dataAtendimento > format(new Date(), 'yyyy-MM-dd')) {
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(corpo.dataAtendimento) ||
+    corpo.dataAtendimento > format(new Date(), 'yyyy-MM-dd')
+  ) {
     detalhes.push({ campo: 'dataAtendimento', mensagem: 'Informe uma data que não seja futura' })
   }
   if (!banco.turnos.some((t) => t.id === corpo.turnoId)) {
@@ -77,9 +90,12 @@ export async function enviarResposta(slug: string, corpo: EnvioResposta): Promis
 
   const itens: RespostaBanco['itens'] = []
   for (const item of corpo.itens) {
-    const pergunta = banco.perguntas.find((p) => p.id === item.perguntaId && p.setorId === setor.id && p.ativa)
+    const pergunta = banco.perguntas.find(
+      (p) => p.id === item.perguntaId && p.setorId === setor.id && p.ativa,
+    )
     const notaValida = Number.isInteger(item.valorNumero) && item.valorNumero! >= 1 && item.valorNumero! <= 5
-    const textoValido = !!item.valorTexto?.trim() && item.valorTexto.length <= banco.configuracoes.texto_limite_caracteres
+    const textoValido =
+      !!item.valorTexto?.trim() && item.valorTexto.length <= banco.configuracoes.texto_limite_caracteres
     if (!pergunta || (pergunta.tipo === 'ESCALA_1_5' ? !notaValida : !textoValido)) {
       detalhes.push({ campo: `itens.${item.perguntaId}`, mensagem: 'Resposta inválida para esta pergunta' })
       continue
@@ -113,7 +129,11 @@ export async function enviarResposta(slug: string, corpo: EnvioResposta): Promis
     contato: null,
     chaveIdempotencia: corpo.chaveIdempotencia,
     // uso único, válido por 30 minutos
-    complemento: { token: tokenAleatorio(), expiraEm: new Date(Date.now() + TRINTA_MINUTOS).toISOString(), usado: false },
+    complemento: {
+      token: tokenAleatorio(),
+      expiraEm: new Date(Date.now() + TRINTA_MINUTOS).toISOString(),
+      usado: false,
+    },
   }
   banco.respostasNovas.push(resposta)
   salvar()
@@ -126,11 +146,21 @@ export async function enviarResposta(slug: string, corpo: EnvioResposta): Promis
 }
 
 /** POST /publico/respostas/:id/complemento (cabeçalho X-Complemento-Token) */
-export async function enviarComplemento(respostaId: number, token: string, corpo: Complemento): Promise<void> {
+export async function enviarComplemento(
+  respostaId: number,
+  token: string,
+  corpo: Complemento,
+): Promise<void> {
   // Valida e grava antes da latência: assim o envio feito ao sair da página não se perde.
   const resposta = banco.respostasNovas.find((r) => r.id === respostaId)
   const complemento = resposta?.complemento
-  if (!resposta || !complemento || complemento.token !== token || complemento.usado || complemento.expiraEm < new Date().toISOString()) {
+  if (
+    !resposta ||
+    !complemento ||
+    complemento.token !== token ||
+    complemento.usado ||
+    complemento.expiraEm < new Date().toISOString()
+  ) {
     await rede()
     throw erros.naoAutenticado('O prazo para complementar esta avaliação terminou.')
   }
@@ -138,14 +168,20 @@ export async function enviarComplemento(respostaId: number, token: string, corpo
   const detalhes: DetalheErro[] = []
   const texto = corpo.comentario?.texto.trim()
   if (corpo.comentario && (!texto || texto.length > banco.configuracoes.texto_limite_caracteres)) {
-    detalhes.push({ campo: 'comentario.texto', mensagem: `Escreva até ${banco.configuracoes.texto_limite_caracteres} caracteres` })
+    detalhes.push({
+      campo: 'comentario.texto',
+      mensagem: `Escreva até ${banco.configuracoes.texto_limite_caracteres} caracteres`,
+    })
   }
   const telefone = corpo.contato?.telefone.replace(/\D/g, '')
   if (corpo.contato && !/^\d{10,11}$/.test(telefone ?? '')) {
     detalhes.push({ campo: 'contato.telefone', mensagem: 'Informe o telefone com DDD' })
   }
   if (corpo.contato && corpo.contato.consentimento !== true) {
-    detalhes.push({ campo: 'contato.consentimento', mensagem: 'O consentimento é obrigatório para guardar o telefone' })
+    detalhes.push({
+      campo: 'contato.consentimento',
+      mensagem: 'O consentimento é obrigatório para guardar o telefone',
+    })
   }
   if (detalhes.length) {
     await rede()

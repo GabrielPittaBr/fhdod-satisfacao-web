@@ -11,7 +11,7 @@ Este arquivo vale para qualquer pessoa ou agente que mexa no `fhdod-satisfacao-w
 
 **Commits e pull requests não levam coautoria nem assinatura de ferramenta.** Nenhum commit tem a linha `Co-Authored-By` de um agente, e nenhuma descrição de PR tem "Generated with Claude Code", link de sessão ou qualquer marca de ferramenta de IA. Vale para pessoas e agentes, mesmo quando a ferramenta sugerir o contrário.
 
-O `.claude/settings.json`, versionado no repositório, já desliga isso no Claude Code para o time todo (`attribution` vazio e `includeCoAuthoredBy: false`). Quem usar outra ferramenta apaga essas linhas à mão antes de commitar ou abrir o PR. A partir do ticket 02, o commitlint recusa mensagens com coautoria do Claude.
+O `.claude/settings.json`, versionado no repositório, já desliga isso no Claude Code para o time todo (`attribution` vazio e `includeCoAuthoredBy: false`). Quem usar outra ferramenta apaga essas linhas à mão antes de commitar ou abrir o PR. O commitlint, no hook `commit-msg`, recusa mensagens com a coautoria ou a assinatura do Claude.
 
 ## Fluxo de branches
 
@@ -107,12 +107,12 @@ Uma tarefa do front só está pronta quando:
 
 - [ ] **a tela funciona no celular e no computador**: testada pelo menos em 360×740 e em 1366×768, sem rolagem horizontal da página, com toque, mouse e teclado. O totem e a TV também são testados nos tamanhos deles (seção 11 do plano do front) quando a tarefa mexe neles;
 - [ ] **os tipos da API vêm do contrato gerado**: `src/lib/api/schema.d.ts`, criado por `pnpm api:tipos` a partir do `openapi.json` da API, nunca escrito nem editado à mão. O gerador chega no ticket 04; até lá, e até cada área ser ligada à API, valem os tipos escritos à mão de `src/lib/api/tipos.ts`;
-- [ ] **`pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build` passam**, incluindo os testes da regra nova;
+- [ ] **`pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build` passam** na máquina e no CI, incluindo os testes da regra nova;
 - [ ] a entrega está **registrada em `docs/registros/`**;
 - [ ] os critérios de aceite do ticket estão marcados e o status está `done`;
 - [ ] outra pessoa do time revisou e aprovou o PR.
 
-Enquanto o CI não existe (ticket 02), os quatro comandos rodam na máquina de quem fez a tarefa; a partir dele, rodam também em todo PR.
+O CI roda os quatro comandos em todo pull request e em cada push na `develop` e na `main`. Rode-os na máquina antes de abrir o PR, para o CI não ser o primeiro a acusar.
 
 ### Registro da entrega
 
@@ -189,19 +189,22 @@ As decisões dos registros de 10/11 e 11/11 valem para toda tela nova ou alterad
 
 ## Comandos do projeto
 
-Node.js 22 ou mais recente e pnpm 12 (a versão fica em `packageManager`; sem o pnpm instalado, use `corepack pnpm`). O passo a passo para rodar está no [README](README.md), com os endereços de cada área.
+Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fica em `packageManager`; sem o pnpm instalado, use `corepack pnpm`). Com outra versão do Node, o pnpm só avisa; o CI usa sempre a do `.nvmrc`. O passo a passo para rodar está no [README](README.md), com os endereços de cada área.
 
 | Comando | O que faz |
 | --- | --- |
-| `pnpm install` | Instala as dependências |
+| `pnpm install` | Instala as dependências e liga os hooks do Git |
 | `pnpm dev` | Servidor de desenvolvimento em `http://localhost:5173` |
 | `pnpm build` | Gera o site estático em `dist/` |
 | `pnpm preview` | Serve o `dist/` para conferir o build |
 | `pnpm lint` | ESLint |
 | `pnpm typecheck` | Checagem de tipos do TypeScript |
 | `pnpm test` | Testes (Vitest) |
-| `pnpm format` | Formata o código de `src/` com o Prettier |
+| `pnpm format` | Formata o projeto com o Prettier (menos os `.md` e o `pnpm-lock.yaml`) |
 
+- **Antes de cada commit**, o Husky roda o ESLint e o Prettier nos arquivos alterados (lint-staged), e o commitlint confere a mensagem: Conventional Commits, com os tipos deste arquivo e sem coautoria nem assinatura do Claude. É a mesma configuração da API.
+- **CI:** o `.github/workflows/ci.yml` instala com o pnpm (com cache) e roda lint, tipos, testes e build em todo pull request e em cada push na `develop` e na `main`. O modelo de PR fica em `.github/pull_request_template.md`.
+- **Formatação:** o commit que passou o Prettier no projeto todo está no `.git-blame-ignore-revs`, que o `git blame` do GitHub pula. Para o da máquina pular também: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 - **Dados simulados:** enquanto a API não chega, `?falha=tudo` (toda chamada falha) e `?falha=envio` (o primeiro envio da pesquisa é gravado, mas a confirmação não chega) testam as telas de erro. A tela de login tem atalhos para entrar como cada perfil, e o Super Admin volta aos dados iniciais pelo menu do usuário, em "Restaurar dados de demonstração".
 
 ## Onde estão as coisas
@@ -215,5 +218,7 @@ Node.js 22 ou mais recente e pnpm 12 (a versão fica em `packageManager`; sem o 
 | Tipos do contrato e erro padrão | [`src/lib/api/`](src/lib/api/) |
 | Dados simulados e as regras que serão da API | [`src/mocks/`](src/mocks/) |
 | Cores, fonte e temas | [`src/styles/globals.css`](src/styles/globals.css) |
+| CI e modelo de pull request | [`.github/`](.github/) |
+| Hooks do Git e regras das mensagens de commit | [`.husky/`](.husky/) e [`commitlint.config.js`](commitlint.config.js) |
 | Configuração do Claude Code para o time | [`.claude/settings.json`](.claude/settings.json) |
 | API | `../fhdod-satisfacao-api`, com o próprio `AGENTS.md` |

@@ -1,5 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Building2, ChartColumn, ChevronDown, KeyRound, LogOut, Menu, MessagesSquare, PhoneCall, RotateCcw, Tags, Tv, Users, type LucideIcon } from 'lucide-react'
+import {
+  Building2,
+  ChartColumn,
+  ChevronDown,
+  KeyRound,
+  LogOut,
+  Menu,
+  MessagesSquare,
+  PhoneCall,
+  RotateCcw,
+  Tags,
+  Tv,
+  Users,
+  type LucideIcon,
+} from 'lucide-react'
 import { Suspense, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -15,8 +29,21 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Toaster } from '@/components/ui/sonner'
 import { restaurarDadosDemo, sair } from '@/features/auth/api'
@@ -39,11 +66,26 @@ const MENU: ItemDoMenu[][] = [
   [
     { para: '/painel', rotulo: 'Indicadores', icone: ChartColumn, permissoes: ['dashboard:ver'] },
     { para: '/painel/respostas', rotulo: 'Respostas', icone: MessagesSquare, permissoes: ['respostas:ver'] },
-    { para: '/painel/contatos', rotulo: 'Pedidos de retorno', icone: PhoneCall, permissoes: ['contatos:ver'] },
+    {
+      para: '/painel/contatos',
+      rotulo: 'Pedidos de retorno',
+      icone: PhoneCall,
+      permissoes: ['contatos:ver'],
+    },
   ],
   [
-    { para: '/painel/setores', rotulo: 'Setores e perguntas', icone: Building2, permissoes: ['setores:gerenciar', 'perguntas:gerenciar'] },
-    { para: '/painel/cadastros', rotulo: 'Categorias e turnos', icone: Tags, permissoes: ['categorias:gerenciar', 'turnos:gerenciar'] },
+    {
+      para: '/painel/setores',
+      rotulo: 'Setores e perguntas',
+      icone: Building2,
+      permissoes: ['setores:gerenciar', 'perguntas:gerenciar'],
+    },
+    {
+      para: '/painel/cadastros',
+      rotulo: 'Categorias e turnos',
+      icone: Tags,
+      permissoes: ['categorias:gerenciar', 'turnos:gerenciar'],
+    },
     { para: '/painel/usuarios', rotulo: 'Usuários', icone: Users, permissoes: ['usuarios:gerenciar'] },
     { para: '/painel/tv', rotulo: 'Telas de TV', icone: Tv, permissoes: ['tvwall:gerenciar'] },
   ],
@@ -52,9 +94,9 @@ const MENU: ItemDoMenu[][] = [
 /** O menu mostra só o que o usuário pode acessar, pela lista de permissões do /auth/me. */
 function Navegacao({ aoNavegar }: { aoNavegar?: () => void }) {
   const permissoes = useSessao((s) => s.sessao?.permissoes ?? [])
-  const grupos = MENU.map((grupo) => grupo.filter((item) => item.permissoes.some((p) => permissoes.includes(p)))).filter(
-    (grupo) => grupo.length > 0,
-  )
+  const grupos = MENU.map((grupo) =>
+    grupo.filter((item) => item.permissoes.some((p) => permissoes.includes(p))),
+  ).filter((grupo) => grupo.length > 0)
   return (
     <nav aria-label="Menu do painel" className="grid gap-3">
       {grupos.map((grupo, i) => (
@@ -68,7 +110,9 @@ function Navegacao({ aoNavegar }: { aoNavegar?: () => void }) {
                 className={({ isActive }) =>
                   cn(
                     'flex min-h-11 items-center gap-3 rounded-lg px-3 text-[0.9375rem] transition-colors',
-                    isActive ? 'bg-secondary font-semibold text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    isActive
+                      ? 'bg-secondary font-semibold text-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                   )
                 }
               >
@@ -141,7 +185,8 @@ function MenuDoUsuario() {
           <AlertDialogHeader>
             <AlertDialogTitle>Restaurar os dados de demonstração?</AlertDialogTitle>
             <AlertDialogDescription>
-              As respostas enviadas neste navegador e as mudanças em setores, perguntas, usuários e telas serão apagadas. Não dá para desfazer.
+              As respostas enviadas neste navegador e as mudanças em setores, perguntas, usuários e telas
+              serão apagadas. Não dá para desfazer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -159,12 +204,21 @@ export default function PainelLayout() {
   const [menuAberto, setMenuAberto] = useState(false)
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">
-      <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-card focus:px-4 focus:py-2">
+      <a
+        href="#conteudo"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-card focus:px-4 focus:py-2"
+      >
         Pular para o conteúdo
       </a>
 
       <aside className="sticky top-0 hidden h-dvh flex-col gap-6 border-r bg-card p-4 lg:flex print:hidden">
-        <img src={logo} alt="FHDOD, Fundação Hospitalar Dr. Oswaldo Diesel" width={450} height={150} className="h-11 w-auto self-start" />
+        <img
+          src={logo}
+          alt="FHDOD, Fundação Hospitalar Dr. Oswaldo Diesel"
+          width={450}
+          height={150}
+          className="h-11 w-auto self-start"
+        />
         <Navegacao />
       </aside>
 

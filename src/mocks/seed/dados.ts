@@ -3,12 +3,24 @@
 import type { Categoria, Perfil, Pergunta, Setor, TipoComentario, Turno } from '@/lib/api/tipos'
 
 export const SETORES: Setor[] = [
-  { id: 1, nome: 'Pronto Atendimento', slug: 'pronto-atendimento', descricao: 'Urgência e emergência, 24 horas', ativo: true },
+  {
+    id: 1,
+    nome: 'Pronto Atendimento',
+    slug: 'pronto-atendimento',
+    descricao: 'Urgência e emergência, 24 horas',
+    ativo: true,
+  },
   { id: 2, nome: 'Internação', slug: 'internacao', descricao: 'Quartos e enfermarias', ativo: true },
   { id: 3, nome: 'Raio-X', slug: 'raio-x', descricao: 'Exames de imagem', ativo: true },
   { id: 4, nome: 'Laboratório', slug: 'laboratorio', descricao: 'Coleta e exames', ativo: true },
   { id: 5, nome: 'Ambulatório', slug: 'ambulatorio', descricao: 'Consultas agendadas', ativo: true },
-  { id: 6, nome: 'Maternidade', slug: 'maternidade', descricao: 'Em reforma: pesquisa pausada', ativo: false },
+  {
+    id: 6,
+    nome: 'Maternidade',
+    slug: 'maternidade',
+    descricao: 'Em reforma: pesquisa pausada',
+    ativo: false,
+  },
 ]
 
 export const CAT = {
@@ -120,16 +132,67 @@ export interface UsuarioSeed {
 }
 
 export const USUARIOS: UsuarioSeed[] = [
-  { id: 1, nome: 'Paulo Klein', email: 'admin@fhdod.example', senha: 'admin-demo-2026', perfil: 'SUPER_ADMIN', setorIds: [], trocarSenha: false, demo: 'Vê e gerencia tudo' },
-  { id: 2, nome: 'Marta Schneider', email: 'marta@fhdod.example', senha: 'gestor-demo-2026', perfil: 'GESTOR', setorIds: [1, 2], trocarSenha: false, demo: 'Pronto Atendimento e Internação' },
-  { id: 3, nome: 'Renata Oliveira', email: 'renata@fhdod.example', senha: 'ouvidoria-demo-2026', perfil: 'OUVIDORIA', setorIds: [], trocarSenha: false, demo: 'Todos os setores e os pedidos de retorno' },
-  { id: 4, nome: 'Diego Fontana', email: 'diego@fhdod.example', senha: 'leitura-demo-2026', perfil: 'VISUALIZADOR', setorIds: [3], trocarSenha: false, demo: 'Só os indicadores do Raio-X' },
-  { id: 5, nome: 'Luana Becker', email: 'luana@fhdod.example', senha: 'provisoria-2026', perfil: 'GESTOR', setorIds: [4], trocarSenha: true, demo: 'Primeiro acesso: precisa trocar a senha' },
+  {
+    id: 1,
+    nome: 'Paulo Klein',
+    email: 'admin@fhdod.example',
+    senha: 'admin-demo-2026',
+    perfil: 'SUPER_ADMIN',
+    setorIds: [],
+    trocarSenha: false,
+    demo: 'Vê e gerencia tudo',
+  },
+  {
+    id: 2,
+    nome: 'Marta Schneider',
+    email: 'marta@fhdod.example',
+    senha: 'gestor-demo-2026',
+    perfil: 'GESTOR',
+    setorIds: [1, 2],
+    trocarSenha: false,
+    demo: 'Pronto Atendimento e Internação',
+  },
+  {
+    id: 3,
+    nome: 'Renata Oliveira',
+    email: 'renata@fhdod.example',
+    senha: 'ouvidoria-demo-2026',
+    perfil: 'OUVIDORIA',
+    setorIds: [],
+    trocarSenha: false,
+    demo: 'Todos os setores e os pedidos de retorno',
+  },
+  {
+    id: 4,
+    nome: 'Diego Fontana',
+    email: 'diego@fhdod.example',
+    senha: 'leitura-demo-2026',
+    perfil: 'VISUALIZADOR',
+    setorIds: [3],
+    trocarSenha: false,
+    demo: 'Só os indicadores do Raio-X',
+  },
+  {
+    id: 5,
+    nome: 'Luana Becker',
+    email: 'luana@fhdod.example',
+    senha: 'provisoria-2026',
+    perfil: 'GESTOR',
+    setorIds: [4],
+    trocarSenha: true,
+    demo: 'Primeiro acesso: precisa trocar a senha',
+  },
 ]
 
 export const TV_TELAS = [
   { id: 1, nome: 'Recepção principal', ativa: true, ultimoAcessoEm: null, token: 'demo-recepcao-fhdod' },
-  { id: 2, nome: 'Corredor da Internação', ativa: false, ultimoAcessoEm: null, token: 'demo-corredor-desativada' },
+  {
+    id: 2,
+    nome: 'Corredor da Internação',
+    ativa: false,
+    ultimoAcessoEm: null,
+    token: 'demo-corredor-desativada',
+  },
 ]
 
 // Padrões da tabela "Configurações do sistema" do Plano de Desenvolvimento.

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { calcularNps, classificarNota, classificarNps, classificarResposta, mascararTelefone, PERMISSOES_POR_PERFIL } from './regras'
+import {
+  calcularNps,
+  classificarNota,
+  classificarNps,
+  classificarResposta,
+  mascararTelefone,
+  PERMISSOES_POR_PERFIL,
+} from './regras'
 import { gerarHistorico } from './seed/historico'
 
 describe('classificação', () => {
@@ -10,7 +17,13 @@ describe('classificação', () => {
   })
 
   it('escala 1 a 5: baixa até 3, baixíssima só no 1', () => {
-    expect([1, 2, 3, 4, 5].map((n) => classificarNota(n))).toEqual(['BAIXISSIMA', 'BAIXA', 'BAIXA', 'NORMAL', 'NORMAL'])
+    expect([1, 2, 3, 4, 5].map((n) => classificarNota(n))).toEqual([
+      'BAIXISSIMA',
+      'BAIXA',
+      'BAIXA',
+      'NORMAL',
+      'NORMAL',
+    ])
   })
 
   it('vale a pior entre o NPS e as notas', () => {
@@ -43,7 +56,9 @@ describe('cálculo do NPS', () => {
 
 describe('permissões e privacidade', () => {
   it('só Super Admin e Ouvidoria veem telefones', () => {
-    const comTelefone = Object.entries(PERMISSOES_POR_PERFIL).flatMap(([perfil, p]) => (p.includes('contatos:ver') ? [perfil] : []))
+    const comTelefone = Object.entries(PERMISSOES_POR_PERFIL).flatMap(([perfil, p]) =>
+      p.includes('contatos:ver') ? [perfil] : [],
+    )
     expect(comTelefone).toEqual(['SUPER_ADMIN', 'OUVIDORIA'])
   })
 

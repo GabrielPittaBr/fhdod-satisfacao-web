@@ -56,17 +56,26 @@ export function Etapas({
           {/* os cinco rostos já carregam aqui, para não piscarem na primeira pergunta */}
           <div aria-hidden className="flex gap-2">
             {NIVEIS.map((nivel) => (
-              <img key={nivel.valor} src={nivel.imagem} alt="" width={96} height={96} className="size-12 sm:size-14" />
+              <img
+                key={nivel.valor}
+                src={nivel.imagem}
+                alt=""
+                width={96}
+                height={96}
+                className="size-12 sm:size-14"
+              />
             ))}
           </div>
-          <Titulo className="mt-6 text-[2rem]/[1.1] sm:text-[2.5rem]/[1.1]">Como foi o seu atendimento?</Titulo>
+          <Titulo className="mt-6 text-[2rem]/[1.1] sm:text-[2.5rem]/[1.1]">
+            Como foi o seu atendimento?
+          </Titulo>
           {/* o setor vem da URL do QR Code: fica bem visível para a pessoa conferir */}
           <p className="mt-4 text-muted-foreground">Você está avaliando</p>
           <p className="text-2xl font-semibold">{pesquisa.setor.nome}</p>
           <ul className="mt-6 grid gap-3">
             <li className="flex items-center gap-3">
-              <ShieldCheck aria-hidden className="size-6 shrink-0 text-primary" />
-              É anônimo: você não precisa dizer seu nome.
+              <ShieldCheck aria-hidden className="size-6 shrink-0 text-primary" />É anônimo: você não precisa
+              dizer seu nome.
             </li>
             <li className="flex items-center gap-3">
               <Clock aria-hidden className="size-6 shrink-0 text-primary" />
@@ -106,7 +115,9 @@ export function Etapas({
   return (
     <Moldura progresso={fluxo.progresso} rodape={rodape}>
       <div ref={conteudo} key={chaveDaTela} className="flex flex-1 flex-col">
-        {estado.etapa === 'data' && <EtapaData valor={estado.dataAtendimento} aoEscolher={fluxo.definirData} />}
+        {estado.etapa === 'data' && (
+          <EtapaData valor={estado.dataAtendimento} aoEscolher={fluxo.definirData} />
+        )}
 
         {estado.etapa === 'turno' && (
           <EtapaTurno turnos={pesquisa.turnos} valor={estado.turnoId} aoEscolher={fluxo.definirTurno} />
@@ -130,17 +141,29 @@ export function Etapas({
           <>
             <Titulo>{pesquisa.npsTexto}</Titulo>
             <div className="mt-6">
-              <EscalaNps pergunta={pesquisa.npsTexto} valor={estado.nps} desabilitada={fluxo.envio.pendente} aoSelecionar={fluxo.selecionarNps} />
+              <EscalaNps
+                pergunta={pesquisa.npsTexto}
+                valor={estado.nps}
+                desabilitada={fluxo.envio.pendente}
+                aoSelecionar={fluxo.selecionarNps}
+              />
             </div>
             {fluxo.envio.erro && (
               <Aviso className="mt-5">
-                {mensagemDeErro(fluxo.envio.erro, 'Não deu para enviar agora.')} Suas respostas continuam aqui.
+                {mensagemDeErro(fluxo.envio.erro, 'Não deu para enviar agora.')} Suas respostas continuam
+                aqui.
               </Aviso>
             )}
-            <BotaoPrincipal className="mt-6" disabled={estado.nps === null || fluxo.envio.pendente} onClick={fluxo.enviar}>
+            <BotaoPrincipal
+              className="mt-6"
+              disabled={estado.nps === null || fluxo.envio.pendente}
+              onClick={fluxo.enviar}
+            >
               {fluxo.envio.pendente ? 'Enviando…' : fluxo.envio.erro ? 'Tentar de novo' : 'Enviar avaliação'}
             </BotaoPrincipal>
-            {estado.nps === null && <p className="mt-3 text-muted-foreground">Toque em uma nota para poder enviar.</p>}
+            {estado.nps === null && (
+              <p className="mt-3 text-muted-foreground">Toque em uma nota para poder enviar.</p>
+            )}
           </>
         )}
 

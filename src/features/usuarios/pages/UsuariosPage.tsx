@@ -8,7 +8,14 @@ import { CampoCopiavel, Confirmacao, DialogoFormulario } from '@/components/crud
 import { CampoSelecao, CampoTexto, ErroDoFormulario } from '@/components/formulario'
 import { Bloco, Consulta, Pagina } from '@/components/layout/Pagina'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { listarSetores } from '@/features/setores/api'
 import type { Perfil, Usuario } from '@/lib/api/tipos'
 import { dataHora } from '@/lib/format'
@@ -16,7 +23,14 @@ import { ROTULO_PERFIL } from '@/lib/rotulos'
 import { aplicarErroDaApi, useSalvar } from '@/lib/salvar'
 import { cn } from '@/lib/utils'
 import { useSessao } from '@/stores/sessao'
-import { alterarStatusUsuario, criarUsuario, definirSetores, editarUsuario, listarUsuarios, redefinirSenha } from '../api'
+import {
+  alterarStatusUsuario,
+  criarUsuario,
+  definirSetores,
+  editarUsuario,
+  listarUsuarios,
+  redefinirSenha,
+} from '../api'
 
 const PERFIS = Object.keys(ROTULO_PERFIL) as Perfil[]
 /** Estes perfis enxergam só os setores vinculados; os outros veem todos. */
@@ -36,7 +50,15 @@ const esquema = z.object({
 })
 type Dados = z.infer<typeof esquema>
 
-function Formulario({ usuario, aoFechar, aoCriar }: { usuario: Usuario | null; aoFechar: () => void; aoCriar: (senha: Senha) => void }) {
+function Formulario({
+  usuario,
+  aoFechar,
+  aoCriar,
+}: {
+  usuario: Usuario | null
+  aoFechar: () => void
+  aoCriar: (senha: Senha) => void
+}) {
   const setores = useQuery({ queryKey: ['setores'], queryFn: listarSetores })
   const form = useForm<Dados>({
     resolver: zodResolver(esquema),
@@ -79,14 +101,36 @@ function Formulario({ usuario, aoFechar, aoCriar }: { usuario: Usuario | null; a
       aberto
       aoFechar={aoFechar}
       titulo={usuario ? `Editar ${usuario.nome}` : 'Novo usuário'}
-      descricao={usuario ? 'O e-mail não muda. Para trocar a senha, use "Redefinir senha".' : 'O sistema cria uma senha provisória. A pessoa troca no primeiro acesso.'}
+      descricao={
+        usuario
+          ? 'O e-mail não muda. Para trocar a senha, use "Redefinir senha".'
+          : 'O sistema cria uma senha provisória. A pessoa troca no primeiro acesso.'
+      }
       rotuloSalvar={usuario ? 'Salvar usuário' : 'Criar usuário'}
       salvando={salvar.isPending}
       aoEnviar={form.handleSubmit((d) => salvar.mutate(d))}
     >
-      <CampoTexto rotulo="Nome completo" autoComplete="off" erro={erros.nome?.message} {...form.register('nome')} />
-      <CampoTexto rotulo="E-mail" type="email" autoComplete="off" spellCheck={false} disabled={!!usuario} erro={erros.email?.message} {...form.register('email')} />
-      <CampoSelecao rotulo="Perfil" dica={O_QUE_FAZ[perfil]} erro={erros.perfil?.message} {...form.register('perfil')}>
+      <CampoTexto
+        rotulo="Nome completo"
+        autoComplete="off"
+        erro={erros.nome?.message}
+        {...form.register('nome')}
+      />
+      <CampoTexto
+        rotulo="E-mail"
+        type="email"
+        autoComplete="off"
+        spellCheck={false}
+        disabled={!!usuario}
+        erro={erros.email?.message}
+        {...form.register('email')}
+      />
+      <CampoSelecao
+        rotulo="Perfil"
+        dica={O_QUE_FAZ[perfil]}
+        erro={erros.perfil?.message}
+        {...form.register('perfil')}
+      >
         {PERFIS.map((p) => (
           <option key={p} value={p}>
             {ROTULO_PERFIL[p]}
@@ -97,8 +141,16 @@ function Formulario({ usuario, aoFechar, aoCriar }: { usuario: Usuario | null; a
         <fieldset className="grid gap-2">
           <legend className="mb-1 text-sm font-medium">Setores que esta pessoa acompanha</legend>
           {setores.data?.map((s) => (
-            <label key={s.id} className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg border px-3 has-checked:border-primary has-checked:bg-secondary">
-              <input type="checkbox" value={s.id} className="size-5 accent-primary" {...form.register('setorIds')} />
+            <label
+              key={s.id}
+              className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg border px-3 has-checked:border-primary has-checked:bg-secondary"
+            >
+              <input
+                type="checkbox"
+                value={s.id}
+                className="size-5 accent-primary"
+                {...form.register('setorIds')}
+              />
               {s.nome}
               {!s.ativo && <span className="text-sm text-muted-foreground">(inativo)</span>}
             </label>
@@ -123,7 +175,9 @@ function SenhaProvisoria({ dados, aoFechar }: { dados: Senha; aoFechar: () => vo
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Senha provisória de {dados.nome}</DialogTitle>
-          <DialogDescription>Anote ou copie agora: ela não aparece de novo. No primeiro acesso, o sistema pede uma senha nova.</DialogDescription>
+          <DialogDescription>
+            Anote ou copie agora: ela não aparece de novo. No primeiro acesso, o sistema pede uma senha nova.
+          </DialogDescription>
         </DialogHeader>
         <CampoCopiavel rotulo="E-mail" valor={dados.email} />
         <CampoCopiavel rotulo="Senha provisória" valor={dados.senha} />
@@ -144,15 +198,25 @@ export default function UsuariosPage() {
   const [senha, setSenha] = useState<Senha | null>(null)
   const [redefinindo, setRedefinindo] = useState<Usuario | null>(null)
 
-  const status = useSalvar(({ id, ativo }: { id: number; ativo: boolean }) => alterarStatusUsuario(id, ativo), {
-    recarregar: ['usuarios'],
-    sucesso: 'Situação do usuário atualizada',
-  })
-  const redefinicao = useSalvar(async (u: Usuario) => ({ nome: u.nome, email: u.email, senha: await redefinirSenha(u.id) }), {
-    recarregar: ['usuarios'],
-    aoConcluir: setSenha,
-  })
-  const nomesDosSetores = (ids: number[]) => ids.map((id) => setores.data?.find((s) => s.id === id)?.nome).filter(Boolean).join(', ')
+  const status = useSalvar(
+    ({ id, ativo }: { id: number; ativo: boolean }) => alterarStatusUsuario(id, ativo),
+    {
+      recarregar: ['usuarios'],
+      sucesso: 'Situação do usuário atualizada',
+    },
+  )
+  const redefinicao = useSalvar(
+    async (u: Usuario) => ({ nome: u.nome, email: u.email, senha: await redefinirSenha(u.id) }),
+    {
+      recarregar: ['usuarios'],
+      aoConcluir: setSenha,
+    },
+  )
+  const nomesDosSetores = (ids: number[]) =>
+    ids
+      .map((id) => setores.data?.find((s) => s.id === id)?.nome)
+      .filter(Boolean)
+      .join(', ')
 
   return (
     <Pagina
@@ -170,18 +234,38 @@ export default function UsuariosPage() {
           {(usuarios) => (
             <ul className="grid gap-3">
               {usuarios.map((u) => (
-                <li key={u.id} className={cn('grid gap-3 rounded-lg border p-4 lg:grid-cols-[1fr_auto] lg:items-center', !u.ativo && 'bg-muted')}>
+                <li
+                  key={u.id}
+                  className={cn(
+                    'grid gap-3 rounded-lg border p-4 lg:grid-cols-[1fr_auto] lg:items-center',
+                    !u.ativo && 'bg-muted',
+                  )}
+                >
                   <div className="min-w-0">
                     <h2 className="flex flex-wrap items-center gap-2 font-semibold">
                       {u.nome}
-                      <span className="rounded-md border border-input/50 px-1.5 text-xs leading-6 font-medium">{ROTULO_PERFIL[u.perfil]}</span>
-                      {!u.ativo && <span className="rounded-md border border-aviso-borda bg-aviso-fundo px-1.5 text-xs leading-6 font-medium text-aviso">Inativo</span>}
-                      {u.trocarSenha && u.ativo && <span className="rounded-md border border-input/50 px-1.5 text-xs leading-6 font-medium">Com senha provisória</span>}
+                      <span className="rounded-md border border-input/50 px-1.5 text-xs leading-6 font-medium">
+                        {ROTULO_PERFIL[u.perfil]}
+                      </span>
+                      {!u.ativo && (
+                        <span className="rounded-md border border-aviso-borda bg-aviso-fundo px-1.5 text-xs leading-6 font-medium text-aviso">
+                          Inativo
+                        </span>
+                      )}
+                      {u.trocarSenha && u.ativo && (
+                        <span className="rounded-md border border-input/50 px-1.5 text-xs leading-6 font-medium">
+                          Com senha provisória
+                        </span>
+                      )}
                     </h2>
                     <p className="text-sm break-all text-muted-foreground">{u.email}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {PERFIS_POR_SETOR.includes(u.perfil) ? `Setores: ${nomesDosSetores(u.setorIds) || 'nenhum vinculado ainda'}.` : 'Todos os setores.'}{' '}
-                      {u.ultimoLoginEm ? `Último acesso em ${dataHora(u.ultimoLoginEm)}.` : 'Ainda não entrou.'}
+                      {PERFIS_POR_SETOR.includes(u.perfil)
+                        ? `Setores: ${nomesDosSetores(u.setorIds) || 'nenhum vinculado ainda'}.`
+                        : 'Todos os setores.'}{' '}
+                      {u.ultimoLoginEm
+                        ? `Último acesso em ${dataHora(u.ultimoLoginEm)}.`
+                        : 'Ainda não entrou.'}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -189,11 +273,19 @@ export default function UsuariosPage() {
                       <Pencil aria-hidden />
                       Editar
                     </Button>
-                    <Button variant="outline" disabled={redefinicao.isPending} onClick={() => setRedefinindo(u)}>
+                    <Button
+                      variant="outline"
+                      disabled={redefinicao.isPending}
+                      onClick={() => setRedefinindo(u)}
+                    >
                       <KeyRound aria-hidden />
                       Redefinir senha
                     </Button>
-                    <Button variant="outline" disabled={status.isPending || u.id === meuId} onClick={() => status.mutate({ id: u.id, ativo: !u.ativo })}>
+                    <Button
+                      variant="outline"
+                      disabled={status.isPending || u.id === meuId}
+                      onClick={() => status.mutate({ id: u.id, ativo: !u.ativo })}
+                    >
                       {u.ativo ? 'Desativar' : 'Ativar'}
                     </Button>
                   </div>
@@ -204,7 +296,13 @@ export default function UsuariosPage() {
         </Consulta>
       </Bloco>
 
-      {editando && <Formulario usuario={editando === 'novo' ? null : editando} aoFechar={() => setEditando(null)} aoCriar={setSenha} />}
+      {editando && (
+        <Formulario
+          usuario={editando === 'novo' ? null : editando}
+          aoFechar={() => setEditando(null)}
+          aoCriar={setSenha}
+        />
+      )}
       <Confirmacao
         aberta={redefinindo !== null}
         aoFechar={() => setRedefinindo(null)}

@@ -3,7 +3,12 @@ import { Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { Pagina } from '@/components/layout/Pagina'
 import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { mensagemDeErro } from '@/lib/api/erro'
 import type { FiltrosDashboard } from '@/lib/api/tipos'
 import { dataCurta } from '@/lib/format'
@@ -27,7 +32,9 @@ function Exportar({ filtros }: { filtros: FiltrosDashboard }) {
     mutationFn: (detalhada: boolean) => (detalhada ? exportarRespostas(filtros) : exportarResumo(filtros)),
     onSuccess: (arquivo) => {
       baixar(arquivo)
-      toast.success('Arquivo exportado', { description: 'Abra no Excel. Ele traz os mesmos filtros da tela.' })
+      toast.success('Arquivo exportado', {
+        description: 'Abra no Excel. Ele traz os mesmos filtros da tela.',
+      })
     },
     onError: (erro) => toast.error(mensagemDeErro(erro, 'Não deu para exportar agora.')),
   })
@@ -71,7 +78,10 @@ export default function DashboardPage() {
       <Filtros {...estado} />
       <Indicadores filtros={filtros} />
       <div className="grid gap-5 xl:grid-cols-2">
-        <NpsPorSetor filtros={filtros} aoEscolher={(setorId) => alterar({ setor: setorId ? String(setorId) : null })} />
+        <NpsPorSetor
+          filtros={filtros}
+          aoEscolher={(setorId) => alterar({ setor: setorId ? String(setorId) : null })}
+        />
         <Evolucao filtros={filtros} />
       </div>
       <div className="grid gap-5 xl:grid-cols-2">

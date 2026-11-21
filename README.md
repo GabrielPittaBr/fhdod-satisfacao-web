@@ -8,10 +8,10 @@ Antes de trabalhar no repositório, leia o [`AGENTS.md`](AGENTS.md): fluxo de br
 
 ## Como rodar
 
-Precisa do Node 22 ou mais recente. O gerenciador é o pnpm (a versão está em `packageManager`); sem ele instalado, use `corepack pnpm` no lugar de `pnpm`.
+Precisa do Node.js 26 (a versão fica no `.nvmrc`, a mesma da API). O gerenciador é o pnpm (a versão está em `packageManager`); sem ele instalado, use `corepack pnpm` no lugar de `pnpm`.
 
 ```bash
-pnpm install
+pnpm install   # dependências e hooks do Git
 ```
 
 ```bash
@@ -28,6 +28,9 @@ Abra `http://localhost:5173/login`. A tela de login tem atalhos para entrar como
 | `pnpm lint` | ESLint |
 | `pnpm typecheck` | Checagem de tipos do TypeScript |
 | `pnpm test` | Testes (Vitest) |
+| `pnpm format` | Formata o projeto com o Prettier |
+
+Antes de cada commit, os hooks do Git rodam o ESLint e o Prettier nos arquivos alterados e conferem a mensagem do commit. Em todo pull request, o CI do GitHub Actions roda lint, tipos, testes e build.
 
 ## Endereços
 

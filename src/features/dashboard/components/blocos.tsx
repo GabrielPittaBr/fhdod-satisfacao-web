@@ -13,11 +13,22 @@ import { nivelDaMedia } from '@/lib/escala'
 import { dataCurta, decimal, npsComSinal, numero, rotuloDoPeriodo } from '@/lib/format'
 import { ROTULO_COMENTARIO } from '@/lib/rotulos'
 import { cn } from '@/lib/utils'
-import { buscarCategorias, buscarComentarios, buscarEvolucao, buscarNpsPorSetor, buscarRanking, buscarResumo } from '../api'
+import {
+  buscarCategorias,
+  buscarComentarios,
+  buscarEvolucao,
+  buscarNpsPorSetor,
+  buscarRanking,
+  buscarResumo,
+} from '../api'
 
 // Indicadores de satisfação não mudam a cada segundo: recarrega a cada 60 s
 // (e ao voltar para a aba); ao trocar o filtro, mantém os números anteriores esmaecidos em vez de piscar.
-const leitura = { refetchInterval: 60_000, refetchOnWindowFocus: true, placeholderData: keepPreviousData } as const
+const leitura = {
+  refetchInterval: 60_000,
+  refetchOnWindowFocus: true,
+  placeholderData: keepPreviousData,
+} as const
 /** Abaixo disso a nota oscila demais para tirar conclusão. Regra de exibição, a confirmar com o hospital. */
 const AMOSTRA_PEQUENA = 30
 
@@ -45,7 +56,9 @@ function Chips<T extends string>({
           onClick={() => aoMudar(opcao)}
           className={cn(
             'min-h-9 rounded-md border px-2.5 text-sm transition-colors',
-            valor === opcao ? 'border-primary bg-primary font-medium text-primary-foreground' : 'border-input/60 bg-card hover:bg-muted',
+            valor === opcao
+              ? 'border-primary bg-primary font-medium text-primary-foreground'
+              : 'border-input/60 bg-card hover:bg-muted',
           )}
         >
           {texto}
@@ -69,7 +82,9 @@ function Composicao({ resumo }: { resumo: Resumo }) {
     <div>
       <div
         role="img"
-        aria-label={PARTES.map((p) => `${p.rotulo}: ${percentual(resumo[p.chave], resumo.total)}%`).join(', ')}
+        aria-label={PARTES.map((p) => `${p.rotulo}: ${percentual(resumo[p.chave], resumo.total)}%`).join(
+          ', ',
+        )}
         className="flex h-7 gap-0.5"
       >
         {PARTES.map((parte) => {
@@ -89,7 +104,11 @@ function Composicao({ resumo }: { resumo: Resumo }) {
       <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-3">
         {PARTES.map((parte) => (
           <div key={parte.chave} className="flex items-baseline gap-2">
-            <span aria-hidden className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: parte.cor }} />
+            <span
+              aria-hidden
+              className="size-2.5 shrink-0 rounded-sm"
+              style={{ backgroundColor: parte.cor }}
+            />
             <dt className="text-sm">
               {parte.rotulo} <span className="text-muted-foreground">({parte.notas})</span>
             </dt>
@@ -102,13 +121,21 @@ function Composicao({ resumo }: { resumo: Resumo }) {
 }
 
 export function Indicadores({ filtros }: { filtros: FiltrosDashboard }) {
-  const consulta = useQuery({ queryKey: ['dashboard', 'resumo', filtros], queryFn: () => buscarResumo(filtros), ...leitura })
+  const consulta = useQuery({
+    queryKey: ['dashboard', 'resumo', filtros],
+    queryFn: () => buscarResumo(filtros),
+    ...leitura,
+  })
   return (
     <Bloco>
       <Consulta consulta={consulta} altura="h-52">
         {(resumo) => {
           if (resumo.total === 0) {
-            return <p className="py-8 text-center text-muted-foreground">Nenhuma resposta com estes filtros. Tente um período maior.</p>
+            return (
+              <p className="py-8 text-center text-muted-foreground">
+                Nenhuma resposta com estes filtros. Tente um período maior.
+              </p>
+            )
           }
           const nivel = resumo.mediaEscala === null ? null : nivelDaMedia(resumo.mediaEscala)
           return (
@@ -144,7 +171,9 @@ export function Indicadores({ filtros }: { filtros: FiltrosDashboard }) {
                   <dt className="text-sm text-muted-foreground">Avaliações com nota baixa</dt>
                   <dd className="text-2xl font-semibold">
                     {numero(resumo.notasBaixas)}{' '}
-                    <span className="text-sm font-normal text-muted-foreground">{percentual(resumo.notasBaixas, resumo.total)}% do total</span>
+                    <span className="text-sm font-normal text-muted-foreground">
+                      {percentual(resumo.notasBaixas, resumo.total)}% do total
+                    </span>
                   </dd>
                 </div>
                 <div>
@@ -176,21 +205,39 @@ export function Indicadores({ filtros }: { filtros: FiltrosDashboard }) {
 
 // ---------- NPS por setor ----------
 
-export function NpsPorSetor({ filtros, aoEscolher }: { filtros: FiltrosDashboard; aoEscolher: (setorId: number | null) => void }) {
-  const consulta = useQuery({ queryKey: ['dashboard', 'setores', filtros], queryFn: () => buscarNpsPorSetor(filtros), ...leitura })
+export function NpsPorSetor({
+  filtros,
+  aoEscolher,
+}: {
+  filtros: FiltrosDashboard
+  aoEscolher: (setorId: number | null) => void
+}) {
+  const consulta = useQuery({
+    queryKey: ['dashboard', 'setores', filtros],
+    queryFn: () => buscarNpsPorSetor(filtros),
+    ...leitura,
+  })
   return (
     <Bloco
       titulo="NPS por setor"
       descricao={filtros.setorId ? undefined : 'Toque em um setor para ver só os números dele.'}
       lateral={
         filtros.setorId && (
-          <button type="button" className="min-h-9 text-sm font-semibold text-primary underline underline-offset-4" onClick={() => aoEscolher(null)}>
+          <button
+            type="button"
+            className="min-h-9 text-sm font-semibold text-primary underline underline-offset-4"
+            onClick={() => aoEscolher(null)}
+          >
             Ver todos os setores
           </button>
         )
       }
     >
-      <Consulta consulta={consulta} vazio={(dados) => dados.length === 0} textoVazio="Nenhum setor recebeu respostas neste período.">
+      <Consulta
+        consulta={consulta}
+        vazio={(dados) => dados.length === 0}
+        textoVazio="Nenhum setor recebeu respostas neste período."
+      >
         {(setores) => {
           const minimo = setores.some((s) => (s.nps ?? 0) < 0) ? -100 : 0
           return (
@@ -244,14 +291,28 @@ export function Evolucao({ filtros }: { filtros: FiltrosDashboard }) {
     <Bloco
       titulo="Evolução do NPS"
       descricao="A linha mostra a nota; as colunas, quantas respostas cada período teve."
-      lateral={<Chips rotulo="Agrupar a evolução" opcoes={GRANULARIDADES} valor={granularidade} aoMudar={setEscolhida} />}
+      lateral={
+        <Chips
+          rotulo="Agrupar a evolução"
+          opcoes={GRANULARIDADES}
+          valor={granularidade}
+          aoMudar={setEscolhida}
+        />
+      }
     >
-      <Consulta consulta={consulta} altura="h-72" vazio={(dados) => dados.every((p) => p.total === 0)} textoVazio="Nenhuma resposta neste período.">
+      <Consulta
+        consulta={consulta}
+        altura="h-72"
+        vazio={(dados) => dados.every((p) => p.total === 0)}
+        textoVazio="Nenhuma resposta neste período."
+      >
         {(pontos) => (
           <>
             <GraficoEvolucao dados={pontos} granularidade={granularidade} />
             <details className="mt-3 text-sm">
-              <summary className="min-h-9 w-fit font-semibold text-primary underline underline-offset-4">Ver os números em tabela</summary>
+              <summary className="min-h-9 w-fit font-semibold text-primary underline underline-offset-4">
+                Ver os números em tabela
+              </summary>
               <div className="mt-2 max-h-64 overflow-auto">
                 <table className="numeros w-full max-w-md text-left">
                   <thead className="text-muted-foreground">
@@ -293,14 +354,28 @@ function Media({ media }: { media: number }) {
 }
 
 export function Categorias({ filtros }: { filtros: FiltrosDashboard }) {
-  const consulta = useQuery({ queryKey: ['dashboard', 'categorias', filtros], queryFn: () => buscarCategorias(filtros), ...leitura })
+  const consulta = useQuery({
+    queryKey: ['dashboard', 'categorias', filtros],
+    queryFn: () => buscarCategorias(filtros),
+    ...leitura,
+  })
   return (
-    <Bloco titulo="Notas por categoria" descricao="Média de 1 a 5 e quanto das notas foi 4 (Bom) ou 5 (Muito bom).">
-      <Consulta consulta={consulta} vazio={(dados) => dados.length === 0} textoVazio="Nenhuma nota de 1 a 5 neste período.">
+    <Bloco
+      titulo="Notas por categoria"
+      descricao="Média de 1 a 5 e quanto das notas foi 4 (Bom) ou 5 (Muito bom)."
+    >
+      <Consulta
+        consulta={consulta}
+        vazio={(dados) => dados.length === 0}
+        textoVazio="Nenhuma nota de 1 a 5 neste período."
+      >
         {(categorias) => (
           <ul className="grid gap-3">
             {categorias.map((c) => (
-              <li key={c.categoriaId} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[10rem_4.5rem_1fr_auto]">
+              <li
+                key={c.categoriaId}
+                className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[10rem_4.5rem_1fr_auto]"
+              >
                 <span className="font-medium">{c.categoria}</span>
                 <Media media={c.media ?? 0} />
                 <span className="col-span-2 sm:col-span-1">
@@ -327,7 +402,10 @@ function ListaDePontos({ titulo, pontos, vazio }: { titulo: string; pontos: Item
       ) : (
         <ol className="mt-2 grid gap-2">
           {pontos.map((p) => (
-            <li key={`${p.setorId}-${p.categoriaId}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2">
+            <li
+              key={`${p.setorId}-${p.categoriaId}`}
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2"
+            >
               <Media media={p.media} />
               <span className="min-w-0 flex-1 basis-40">
                 <span className="block font-medium">{p.categoria}</span>
@@ -347,14 +425,29 @@ function ListaDePontos({ titulo, pontos, vazio }: { titulo: string; pontos: Item
 }
 
 export function Ranking({ filtros }: { filtros: FiltrosDashboard }) {
-  const consulta = useQuery({ queryKey: ['dashboard', 'ranking', filtros], queryFn: () => buscarRanking(filtros), ...leitura })
+  const consulta = useQuery({
+    queryKey: ['dashboard', 'ranking', filtros],
+    queryFn: () => buscarRanking(filtros),
+    ...leitura,
+  })
   return (
-    <Bloco titulo="Melhores e piores pontos" descricao="Cada ponto é uma categoria dentro de um setor. Só entram pontos com 5 notas ou mais.">
-      <Consulta consulta={consulta} vazio={(r) => r.melhores.length === 0} textoVazio="Ainda não há notas suficientes para comparar.">
+    <Bloco
+      titulo="Melhores e piores pontos"
+      descricao="Cada ponto é uma categoria dentro de um setor. Só entram pontos com 5 notas ou mais."
+    >
+      <Consulta
+        consulta={consulta}
+        vazio={(r) => r.melhores.length === 0}
+        textoVazio="Ainda não há notas suficientes para comparar."
+      >
         {(ranking) => (
           <div className="grid gap-6">
             <ListaDePontos titulo="Onde está melhor" pontos={ranking.melhores} vazio="" />
-            <ListaDePontos titulo="Onde precisa de atenção" pontos={ranking.piores} vazio="Há poucos pontos avaliados para separar os piores." />
+            <ListaDePontos
+              titulo="Onde precisa de atenção"
+              pontos={ranking.piores}
+              vazio="Há poucos pontos avaliados para separar os piores."
+            />
           </div>
         )}
       </Consulta>
@@ -382,10 +475,16 @@ export function Comentarios({ filtros }: { filtros: FiltrosDashboard }) {
   return (
     <Bloco
       titulo="Comentários recentes"
-      descricao={consulta.data ? `${numero(consulta.data.meta.total)} no período. Estes são os mais novos.` : undefined}
+      descricao={
+        consulta.data ? `${numero(consulta.data.meta.total)} no período. Estes são os mais novos.` : undefined
+      }
       lateral={<Chips rotulo="Tipo de comentário" opcoes={TIPOS} valor={tipo} aoMudar={setTipo} />}
     >
-      <Consulta consulta={consulta} vazio={(lista) => lista.data.length === 0} textoVazio="Nenhum comentário deste tipo no período.">
+      <Consulta
+        consulta={consulta}
+        vazio={(lista) => lista.data.length === 0}
+        textoVazio="Nenhum comentário deste tipo no período."
+      >
         {(lista) => (
           <ul className="grid gap-3 md:grid-cols-2">
             {lista.data.map((c) => (
@@ -399,7 +498,10 @@ export function Comentarios({ filtros }: { filtros: FiltrosDashboard }) {
                   <span>
                     {c.setor}, atendimento em {dataCurta(c.dataAtendimento)}
                   </span>
-                  <Link to={`/painel/respostas?resposta=${c.respostaId}`} className="font-semibold text-primary underline underline-offset-4">
+                  <Link
+                    to={`/painel/respostas?resposta=${c.respostaId}`}
+                    className="font-semibold text-primary underline underline-offset-4"
+                  >
                     Ver a resposta
                   </Link>
                 </p>

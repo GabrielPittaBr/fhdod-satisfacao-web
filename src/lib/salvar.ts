@@ -48,5 +48,7 @@ export function aplicarErroDaApi<T extends FieldValues>(form: UseFormReturn<T>, 
   const campos = Object.keys(form.getValues())
   const detalhes = erro instanceof ErroApi ? erro.detalhes.filter((d) => campos.includes(d.campo)) : []
   if (detalhes.length === 0) return form.setError('root', { message: mensagemDeErro(erro) })
-  detalhes.forEach((d, i) => form.setError(d.campo as Path<T>, { message: d.mensagem }, { shouldFocus: i === 0 }))
+  detalhes.forEach((d, i) =>
+    form.setError(d.campo as Path<T>, { message: d.mensagem }, { shouldFocus: i === 0 }),
+  )
 }

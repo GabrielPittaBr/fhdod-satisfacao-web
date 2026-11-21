@@ -8,6 +8,8 @@ export const buscarIndicadoresTv = async (tokenDaTela: string) => (await indicad
 /** GET /tv-telas */
 export const listarTelas = () => comToken(async (t) => (await cadastros.listarTelasTv(t)).data)
 /** POST /tv-telas (devolve o token uma única vez) */
-export const criarTela = (nome: string) => comToken(async (t) => (await cadastros.criarTelaTv(t, { nome })).data)
+export const criarTela = (nome: string) =>
+  comToken(async (t) => (await cadastros.criarTelaTv(t, { nome })).data)
 /** PATCH /tv-telas/:id/status */
-export const alterarStatusTela = (id: number, ativa: boolean) => comToken((t) => cadastros.alterarStatusTelaTv(t, id, ativa))
+export const alterarStatusTela = (id: number, ativa: boolean) =>
+  comToken((t) => cadastros.alterarStatusTelaTv(t, id, ativa))

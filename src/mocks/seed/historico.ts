@@ -60,11 +60,69 @@ interface PerfilSetor {
 }
 
 const PERFIS: Record<number, PerfilSetor> = {
-  1: { volume: 3, fimDeSemana: 1.1, qualidade: 0.66, tendencia: 0.08, totem: 0.6, turnos: [[1, 36], [2, 36], [3, 28]], vies: { [CAT.ESPERA]: -0.27, [CAT.TRIAGEM]: -0.04, [CAT.ENFERMAGEM]: 0.08, [CAT.MEDICO]: 0.06 } },
-  2: { volume: 1.5, fimDeSemana: 0.8, qualidade: 0.8, tendencia: 0, totem: 0.3, turnos: [[1, 50], [2, 35], [3, 15]], vies: { [CAT.ESTRUTURA]: -0.16, [CAT.ENFERMAGEM]: 0.1, [CAT.MEDICO]: 0.05 } },
-  3: { volume: 1.4, fimDeSemana: 0.3, qualidade: 0.8, tendencia: 0.02, totem: 0.5, turnos: [[1, 55], [2, 42], [3, 3]], vies: { [CAT.ESPERA]: -0.05, [CAT.ENFERMAGEM]: 0.08, [CAT.ESTRUTURA]: -0.04 } },
-  4: { volume: 1.3, fimDeSemana: 0.3, qualidade: 0.82, tendencia: 0, totem: 0.45, turnos: [[1, 75], [2, 25]], vies: { [CAT.ESPERA]: -0.1, [CAT.ENFERMAGEM]: 0.1, [CAT.HIGIENE]: 0.06 } },
-  5: { volume: 1.6, fimDeSemana: 0.1, qualidade: 0.76, tendencia: -0.03, totem: 0.4, turnos: [[1, 50], [2, 50]], vies: { [CAT.ESPERA]: -0.18, [CAT.RECEPCAO]: -0.03, [CAT.MEDICO]: 0.1 } },
+  1: {
+    volume: 3,
+    fimDeSemana: 1.1,
+    qualidade: 0.66,
+    tendencia: 0.08,
+    totem: 0.6,
+    turnos: [
+      [1, 36],
+      [2, 36],
+      [3, 28],
+    ],
+    vies: { [CAT.ESPERA]: -0.27, [CAT.TRIAGEM]: -0.04, [CAT.ENFERMAGEM]: 0.08, [CAT.MEDICO]: 0.06 },
+  },
+  2: {
+    volume: 1.5,
+    fimDeSemana: 0.8,
+    qualidade: 0.8,
+    tendencia: 0,
+    totem: 0.3,
+    turnos: [
+      [1, 50],
+      [2, 35],
+      [3, 15],
+    ],
+    vies: { [CAT.ESTRUTURA]: -0.16, [CAT.ENFERMAGEM]: 0.1, [CAT.MEDICO]: 0.05 },
+  },
+  3: {
+    volume: 1.4,
+    fimDeSemana: 0.3,
+    qualidade: 0.8,
+    tendencia: 0.02,
+    totem: 0.5,
+    turnos: [
+      [1, 55],
+      [2, 42],
+      [3, 3],
+    ],
+    vies: { [CAT.ESPERA]: -0.05, [CAT.ENFERMAGEM]: 0.08, [CAT.ESTRUTURA]: -0.04 },
+  },
+  4: {
+    volume: 1.3,
+    fimDeSemana: 0.3,
+    qualidade: 0.82,
+    tendencia: 0,
+    totem: 0.45,
+    turnos: [
+      [1, 75],
+      [2, 25],
+    ],
+    vies: { [CAT.ESPERA]: -0.1, [CAT.ENFERMAGEM]: 0.1, [CAT.HIGIENE]: 0.06 },
+  },
+  5: {
+    volume: 1.6,
+    fimDeSemana: 0.1,
+    qualidade: 0.76,
+    tendencia: -0.03,
+    totem: 0.4,
+    turnos: [
+      [1, 50],
+      [2, 50],
+    ],
+    vies: { [CAT.ESPERA]: -0.18, [CAT.RECEPCAO]: -0.03, [CAT.MEDICO]: 0.1 },
+  },
 }
 
 const HORAS_DO_TURNO: Record<number, readonly [number, number]> = { 1: [7, 13], 2: [13, 19], 3: [19, 24] }
@@ -102,15 +160,28 @@ export function gerarHistorico(hoje = new Date()): RespostaBanco[] {
         for (const pergunta of perguntas) {
           if (r() > (pergunta.tipo === 'TEXTO' ? 0.12 : 0.84)) continue // pulada
           const s = limitar(q + (perfil.vies[pergunta.categoriaId] ?? 0), 0, 1)
-          const item = { perguntaId: pergunta.id, categoriaId: pergunta.categoriaId, perguntaTexto: pergunta.texto, tipo: pergunta.tipo }
+          const item = {
+            perguntaId: pergunta.id,
+            categoriaId: pergunta.categoriaId,
+            perguntaTexto: pergunta.texto,
+            tipo: pergunta.tipo,
+          }
           if (pergunta.tipo === 'ESCALA_1_5') {
             const nota = limitar(Math.round(1 + 4.4 * s ** 0.55 + (r() - 0.5) * 0.7), 1, 5)
             itens.push({ ...item, valorNumero: nota, valorTexto: null })
           } else if (pergunta.tipo === 'SIM_NAO') {
-            itens.push({ ...item, valorNumero: null, valorTexto: r() < limitar(s + 0.15, 0.05, 0.97) ? 'SIM' : 'NAO' })
+            itens.push({
+              ...item,
+              valorNumero: null,
+              valorTexto: r() < limitar(s + 0.15, 0.05, 0.97) ? 'SIM' : 'NAO',
+            })
           } else if (pergunta.tipo === 'MULTIPLA_ESCOLHA') {
             const opcoes = pergunta.opcoes ?? []
-            const indice = limitar(Math.floor((1 - s + (r() - 0.5) * 0.3) * opcoes.length), 0, opcoes.length - 1)
+            const indice = limitar(
+              Math.floor((1 - s + (r() - 0.5) * 0.3) * opcoes.length),
+              0,
+              opcoes.length - 1,
+            )
             itens.push({ ...item, valorNumero: null, valorTexto: opcoes[indice] ?? null })
           } else {
             itens.push({ ...item, valorNumero: null, valorTexto: escolher(r, ELOGIOS_A_PROFISSIONAIS) })
@@ -130,7 +201,11 @@ export function gerarHistorico(hoje = new Date()): RespostaBanco[] {
         if (canal === 'TOTEM') {
           envio.setHours(0, Math.round((horaAtendimento + 0.3) * 60))
         } else {
-          const diasDepois = escolherPorPeso(r, [[0, 50], [1, 35], [2, 15]] as const)
+          const diasDepois = escolherPorPeso(r, [
+            [0, 50],
+            [1, 35],
+            [2, 15],
+          ] as const)
           const hora = diasDepois === 0 ? Math.max(horaAtendimento + 1, 19 + r() * 4.5) : 8 + r() * 14
           envio = addDays(dia, diasDepois)
           envio.setHours(0, Math.round(hora * 60))
@@ -146,8 +221,16 @@ export function gerarHistorico(hoje = new Date()): RespostaBanco[] {
           const tipo = escolherPorPeso<TipoComentario>(
             r,
             baixa
-              ? [['RECLAMACAO', 72], ['SUGESTAO', 20], ['OUTRO', 8]]
-              : [['ELOGIO', 72], ['SUGESTAO', 22], ['OUTRO', 6]],
+              ? [
+                  ['RECLAMACAO', 72],
+                  ['SUGESTAO', 20],
+                  ['OUTRO', 8],
+                ]
+              : [
+                  ['ELOGIO', 72],
+                  ['SUGESTAO', 22],
+                  ['OUTRO', 6],
+                ],
           )
           comentario = { tipo, texto: escolher(r, COMENTARIOS[tipo]) }
         }
@@ -163,7 +246,19 @@ export function gerarHistorico(hoje = new Date()): RespostaBanco[] {
               }
             : null
 
-        respostas.push({ id, setorId, canal, dataAtendimento, turnoId, nps, classificacao, enviadoEm, itens, comentario, contato })
+        respostas.push({
+          id,
+          setorId,
+          canal,
+          dataAtendimento,
+          turnoId,
+          nps,
+          classificacao,
+          enviadoEm,
+          itens,
+          comentario,
+          contato,
+        })
       }
     }
   }

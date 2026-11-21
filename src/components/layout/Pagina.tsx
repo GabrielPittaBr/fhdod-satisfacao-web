@@ -82,7 +82,11 @@ export function Consulta<T>({
 }) {
   if (consulta.data !== undefined) {
     if (vazio?.(consulta.data)) return <p className="py-8 text-center text-muted-foreground">{textoVazio}</p>
-    return <div className={cn('transition-opacity', consulta.isPlaceholderData && 'opacity-60')}>{children(consulta.data)}</div>
+    return (
+      <div className={cn('transition-opacity', consulta.isPlaceholderData && 'opacity-60')}>
+        {children(consulta.data)}
+      </div>
+    )
   }
   if (consulta.isError) {
     return (

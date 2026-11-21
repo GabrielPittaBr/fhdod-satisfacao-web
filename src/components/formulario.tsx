@@ -29,13 +29,20 @@ function Moldura({ id, rotulo, erro, dica, children }: BaseDoCampo & { id: strin
   )
 }
 
-const descricao = (id: string, { erro, dica }: Partial<BaseDoCampo>) => (erro ? `${id}-erro` : dica ? `${id}-dica` : undefined)
+const descricao = (id: string, { erro, dica }: Partial<BaseDoCampo>) =>
+  erro ? `${id}-erro` : dica ? `${id}-dica` : undefined
 
 export function CampoTexto({ rotulo, erro, dica, ...input }: BaseDoCampo & ComponentProps<'input'>) {
   const id = useId()
   return (
     <Moldura id={id} rotulo={rotulo} erro={erro} dica={dica}>
-      <Input id={id} autoComplete="off" aria-invalid={erro ? true : undefined} aria-describedby={descricao(id, { erro, dica })} {...input} />
+      <Input
+        id={id}
+        autoComplete="off"
+        aria-invalid={erro ? true : undefined}
+        aria-describedby={descricao(id, { erro, dica })}
+        {...input}
+      />
     </Moldura>
   )
 }
@@ -44,7 +51,14 @@ export const classeDaSelecao =
   'h-10 w-full rounded-lg border border-input bg-card px-3 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 md:text-sm'
 
 /** Seleção nativa do navegador: acessível por teclado e toque sem código extra. */
-export function CampoSelecao({ rotulo, erro, dica, className, children, ...select }: BaseDoCampo & ComponentProps<'select'>) {
+export function CampoSelecao({
+  rotulo,
+  erro,
+  dica,
+  className,
+  children,
+  ...select
+}: BaseDoCampo & ComponentProps<'select'>) {
   const id = useId()
   return (
     <Moldura id={id} rotulo={rotulo} erro={erro} dica={dica}>
@@ -65,7 +79,10 @@ export function CampoSelecao({ rotulo, erro, dica, className, children, ...selec
 export function ErroDoFormulario({ mensagem }: { mensagem?: string }) {
   if (!mensagem) return null
   return (
-    <p role="alert" className="rounded-lg border border-aviso-borda bg-aviso-fundo px-3 py-2 text-sm font-medium text-aviso">
+    <p
+      role="alert"
+      className="rounded-lg border border-aviso-borda bg-aviso-fundo px-3 py-2 text-sm font-medium text-aviso"
+    >
       {mensagem}
     </p>
   )

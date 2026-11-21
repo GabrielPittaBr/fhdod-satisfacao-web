@@ -1,15 +1,33 @@
 import { useMutation } from '@tanstack/react-query'
 import { useEffect, useReducer, useRef } from 'react'
-import type { Canal, Complemento, EnvioResposta, ItemEnvio, PesquisaPublica, RespostaCriada } from '@/lib/api/tipos'
+import type {
+  Canal,
+  Complemento,
+  EnvioResposta,
+  ItemEnvio,
+  PesquisaPublica,
+  RespostaCriada,
+} from '@/lib/api/tipos'
 import { isoDoDia } from '@/lib/format'
 import { enviarComplemento, enviarResposta } from '../api'
-import { estadoInicial, montarEnvio, novaChave, progresso, redutor, turnoDoHorario, type Comentario } from '../fluxo'
+import {
+  estadoInicial,
+  montarEnvio,
+  novaChave,
+  progresso,
+  redutor,
+  turnoDoHorario,
+  type Comentario,
+} from '../fluxo'
 
 /** Etapas, respostas e envio da pesquisa. O mesmo hook atende celular, computador e totem. */
 export function useFluxoPesquisa(pesquisa: PesquisaPublica, canal: Canal) {
   const slug = pesquisa.setor.slug
   const [estado, despachar] = useReducer(redutor, pesquisa, (p) =>
-    estadoInicial(p.perguntas.map((pergunta) => pergunta.id), novaChave()),
+    estadoInicial(
+      p.perguntas.map((pergunta) => pergunta.id),
+      novaChave(),
+    ),
   )
   // trava contra duplo toque no "Enviar"; a chave de idempotência cobre o que escapar
   const enviando = useRef(false)
