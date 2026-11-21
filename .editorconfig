@@ -10,3 +10,7 @@ trim_trailing_whitespace = true
 
 [*.md]
 trim_trailing_whitespace = false
+
+# Tabulação, como no caddy fmt: o Caddy avisa ao subir quando o arquivo sai desse formato
+[Caddyfile]
+indent_style = tab
