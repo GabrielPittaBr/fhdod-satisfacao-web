@@ -1,0 +1,219 @@
+# AGENTS.md — como trabalhar no front
+
+Este arquivo vale para qualquer pessoa ou agente que mexa no `fhdod-satisfacao-web`, o front-end do Sistema de Satisfação Hospitalar da FHDOD: a pesquisa do paciente (celular, tablet e totem), o painel da gestão e a TV Wall. Leia antes de começar qualquer tarefa. Todos os tickets seguem o que está escrito aqui.
+
+- **Regras de negócio:** o [Plano de Desenvolvimento](https://github.com/GabrielPittaBr/fhdod-satisfacao-api/blob/develop/docs/Plano%20de%20Desenvolvimento%20-%20FHDOD.md) é a fonte. Ele fica no repositório da API, em `../fhdod-satisfacao-api/docs/`, com os dois repositórios clonados lado a lado na mesma pasta.
+- **Telas e interface:** o [plano do front](docs/plano-frontend.md) e os [registros](docs/registros/). Se o plano do front e o Plano de Desenvolvimento discordarem numa regra de negócio, vale o Plano de Desenvolvimento. O plano do front foi escrito antes da API: o que ele deixou de fora (tipos gerados, Docker, Caddy e a ligação com a API) chega pelos tickets.
+- **O que fazer:** os tickets de [`docs/tickets/`](docs/tickets/).
+- **Como trabalhar:** este arquivo. O Claude Code o carrega sozinho pelo `CLAUDE.md`.
+
+## Sem coautoria nem assinatura
+
+**Commits e pull requests não levam coautoria nem assinatura de ferramenta.** Nenhum commit tem a linha `Co-Authored-By` de um agente, e nenhuma descrição de PR tem "Generated with Claude Code", link de sessão ou qualquer marca de ferramenta de IA. Vale para pessoas e agentes, mesmo quando a ferramenta sugerir o contrário.
+
+O `.claude/settings.json`, versionado no repositório, já desliga isso no Claude Code para o time todo (`attribution` vazio e `includeCoAuthoredBy: false`). Quem usar outra ferramenta apaga essas linhas à mão antes de commitar ou abrir o PR. A partir do ticket 02, o commitlint recusa mensagens com coautoria do Claude.
+
+## Fluxo de branches
+
+O mesmo da API:
+
+| Branch | Para quê | Quem escreve nela |
+| --- | --- | --- |
+| `develop` | Base de todo o trabalho; reúne o que já foi revisado | Só merge de branch de tarefa, por PR |
+| `main` | Só versões estáveis, prontas para o hospital | Só merge da `develop`, com tag de versão |
+| `<tipo>/<NN>-<assunto>` | Uma tarefa (um ticket) | Quem pegou o ticket |
+
+- **Uma branch por tarefa**, curta, criada a partir da `develop` atualizada.
+- **Nome:** prefixo do tipo, número do ticket com dois dígitos e um resumo em kebab-case, sem acentos. Exemplo: `feat/05-login-e-sessao-reais`.
+- **Prefixos:** `feat/`, `fix/`, `docs/`, `chore/`, `style/`, `refactor/`, `test/` e `ci/`, os mesmos tipos dos commits.
+- **Terminou a tarefa:** a branch volta para a `develop` por pull request, com o CI verde e a aprovação de outra pessoa do time. Use merge commit, sem squash, como no histórico atual.
+- **Versão estável:** a `main` recebe a `develop` e ganha uma tag de versão (`v0.1.0`, `v0.2.0`...). O que vai para o hospital sai sempre da `main`.
+- **Ninguém commita direto na `develop` nem na `main`.**
+
+```bash
+git switch develop
+git pull
+git switch -c feat/05-login-e-sessao-reais
+# ... commits ...
+git push -u origin feat/05-login-e-sessao-reais
+gh pr create --base develop
+```
+
+O PR é pequeno e diz o que mudou, como testar e qual é o ticket. Se a tarefa muda uma tela, o PR leva prints no celular e no computador. Atenção à base: o padrão do GitHub é a `main`, e o PR de uma tarefa vai sempre para a `develop`.
+
+Os merges antigos do histórico (`feat/painel`, `feat/tv-wall`...) são de antes dos tickets, por isso as branches não têm número. Daqui em diante, toda branch leva o número do ticket.
+
+## Padrão de commits
+
+O mesmo da API: [Conventional Commits](https://www.conventionalcommits.org/pt-br/), `tipo(escopo): descrição`.
+
+- **Tipo em inglês:** `feat` (funcionalidade), `fix` (correção), `docs` (documentação), `chore` (configuração e manutenção), `style` (formatação, sem mudar comportamento), `refactor` (reorganização, sem mudar comportamento), `test` (testes) e `ci` (pipeline).
+- **Escopo:** o assunto afetado, com o mesmo nome da pasta em `src/features/` (`auth`, `pesquisa`, `dashboard`, `respostas`, `contatos`, `setores`, `perguntas`, `cadastros`, `usuarios`, `tv-wall`). Mudanças fora das features usam a área (`api` para `src/lib/api/`, `mocks`, `ui`, `totem`, `tickets`, `registros`); mudanças que tocam o projeto inteiro ficam sem escopo.
+- **Descrição em português**, curta, começando com letra minúscula e sem ponto final. Se o porquê não for óbvio, explique no corpo do commit.
+
+| Exemplo | Quando |
+| --- | --- |
+| `feat(pesquisa): escala de rostinhos` | Funcionalidade nova numa feature |
+| `fix(auth): renovar o token só uma vez` | Correção |
+| `test(mocks): classificação e cálculo do nps` | Testes |
+| `docs(tickets): divide a ligação com a API em 10 tickets` | Documentação de uma área |
+| `chore: configuração do Claude Code sem coautoria` | Configuração do projeto inteiro |
+| `ci: lint, tipos, testes e build no GitHub Actions` | Pipeline |
+
+## Tickets
+
+- Ficam em `docs/tickets/`, **um por arquivo** (`NN-assunto.md`), e são **espelhados como issues no GitHub** com o mesmo número: o ticket `05` é a issue #5 deste repositório.
+- Cada ticket diz o que construir, por quem está bloqueado, o status e os critérios de aceite.
+- **Só se pega um ticket cujos bloqueios já estão feitos** (status `done`). A numeração segue a ordem dos bloqueios.
+- Tickets `ready-for-human` precisam de alguém do time (acesso a servidor, domínio, conversa com o hospital). Um agente não os pega sozinho; ajuda só se alguém pedir.
+
+### Tickets que ligam uma área à API
+
+**Um ticket do front que liga uma área à API só começa depois dos tickets da API de que ele depende.** O "Bloqueado por" desses tickets cita os da API pelo número e pelo nome (por exemplo, "API 03 — Contrato: Swagger, `openapi.json` e CI"), e cada um deles precisa estar `done` no repositório da API: com o status `done` no arquivo do ticket, na `develop` da API. Sem isso, o front ficaria desenhado contra um contrato que ainda não existe.
+
+```bash
+# Status do ticket 03 da API na develop de lá, com os dois repositórios lado a lado
+git -C ../fhdod-satisfacao-api fetch origin
+git -C ../fhdod-satisfacao-api grep -h "Status" origin/develop -- "docs/tickets/03-*.md"
+```
+
+Ao ligar uma área à API, **só o `api.ts` dela muda**: telas e hooks continuam iguais. Se a API devolve algo diferente do mock, vale a API, e a diferença fica no registro e no PR.
+
+### Status
+
+| Status | Quando | No arquivo | No GitHub |
+| --- | --- | --- | --- |
+| `ready-for-agent` | Pronto para pegar | `**Status:** ready-for-agent` | Etiqueta `ready-for-agent` |
+| `in-progress` | Alguém começou | `**Status:** in-progress` | Etiqueta `in-progress` no lugar de `ready-for-agent` |
+| `done` | A branch entrou na `develop` | `**Status:** done`, com os critérios marcados `[x]` | Issue fechada |
+
+**Ao começar:** crie a branch e troque a etiqueta da issue, para o time saber que o ticket tem dono.
+
+```bash
+gh issue edit 5 --remove-label ready-for-agent --add-label in-progress
+```
+
+**Ao terminar:** o último commit da branch marca os critérios atendidos e passa o status do arquivo para `done`. Quando o PR entra na `develop`, a issue é fechada **à mão**: o GitHub só fecha sozinho uma issue citada com `Closes #5` quando o PR entra na branch padrão, que hoje é a `main`. Se a `develop` virar a branch padrão, o `Closes #5` na descrição do PR passa a bastar.
+
+```bash
+gh issue close 5 --comment "Entrou na develop pelo PR #NN."
+```
+
+Se um critério não puder ser cumprido como está escrito, não o pule em silêncio: explique no registro da entrega, em "O que mudou em relação ao plano", e no PR.
+
+## Definição de pronto
+
+Uma tarefa do front só está pronta quando:
+
+- [ ] **a tela funciona no celular e no computador**: testada pelo menos em 360×740 e em 1366×768, sem rolagem horizontal da página, com toque, mouse e teclado. O totem e a TV também são testados nos tamanhos deles (seção 11 do plano do front) quando a tarefa mexe neles;
+- [ ] **os tipos da API vêm do contrato gerado**: `src/lib/api/schema.d.ts`, criado por `pnpm api:tipos` a partir do `openapi.json` da API, nunca escrito nem editado à mão. O gerador chega no ticket 04; até lá, e até cada área ser ligada à API, valem os tipos escritos à mão de `src/lib/api/tipos.ts`;
+- [ ] **`pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build` passam**, incluindo os testes da regra nova;
+- [ ] a entrega está **registrada em `docs/registros/`**;
+- [ ] os critérios de aceite do ticket estão marcados e o status está `done`;
+- [ ] outra pessoa do time revisou e aprovou o PR.
+
+Enquanto o CI não existe (ticket 02), os quatro comandos rodam na máquina de quem fez a tarefa; a partir dele, rodam também em todo PR.
+
+### Registro da entrega
+
+Cada entrega ganha um arquivo em `docs/registros/`, no formato que o plano do front criou e a API copiou: `AAAA-MM-DD-NN-assunto.md`, em que `NN` é a ordem do registro naquele dia. O registro traz:
+
+1. título, data, autor (pessoa ou agente) e o link do ticket;
+2. **O que foi feito**;
+3. **Decisões e por quê**, numa tabela, citando a persona, a regra do plano ou a necessidade por trás de cada uma;
+4. **Ferramentas e skills usadas**;
+5. **O que mudou em relação ao plano**;
+6. **Pendências e dúvidas**.
+
+Quando a entrega mexe em telas, entra também **Como foi verificado**: os fluxos e os tamanhos de tela testados, como no registro de 11/11. O registro conta pontos na atividade ("Registro do processo e justificativas"), então as justificativas precisam ser claras.
+
+## Regras que já valem no front
+
+### Só a camada de chamadas conversa com a API
+
+```text
+componente → hook (TanStack Query) → features/<assunto>/api.ts → API (hoje, src/mocks/)
+```
+
+- **Só o `api.ts` de cada assunto conversa com a API** e, enquanto ela não chega, com `src/mocks/`. Componentes, páginas e hooks nunca chamam `fetch`, o cliente HTTP nem os mocks diretamente.
+- Cada função do `api.ts` corresponde a um endpoint do contrato: `buscarPesquisa(slug)` ↔ `GET /publico/setores/:slug/pesquisa`.
+- Todas as leituras e envios passam pelo TanStack Query, para os estados de carregamento e erro existirem em toda tela.
+- Erros chegam às telas como `ErroApi` (`src/lib/api/erro.ts`), com status, código, mensagem, detalhes e `requestId`. A tela mostra a mensagem da API, que já vem escrita para quem está na tela, e os erros de validação vão para o campo do formulário indicado em `detalhes` (`src/lib/salvar.ts`).
+
+### O front nunca recalcula classificação, NPS nem permissão
+
+- A **classificação** da resposta (NORMAL, BAIXA, BAIXISSIMA) e o **NPS** chegam prontos da API; o front só os exibe. Nada de decidir nota baixa num componente.
+- Menus e rotas dependem da **lista de permissões** do `/auth/me` (`usePode`, em `src/stores/sessao.ts`), nunca do nome do perfil. Esconder um botão é só conforto: quem garante o acesso é a API.
+- Enquanto houver dados simulados, essas regras ficam só em `src/mocks/regras.ts`.
+
+### Nada da pesquisa fica salvo no navegador
+
+- O estado da pesquisa vive no `useReducer` do `useFluxoPesquisa` e some ao reiniciar. **Nada da pesquisa vai para `localStorage`, `sessionStorage`, cookie ou URL**, nem a chave de idempotência: no totem, o próximo paciente não pode ver nada do anterior.
+- O token de acesso do painel fica só em memória (Zustand); ao recarregar, a sessão volta pelo refresh.
+- Hoje o `localStorage` guarda só o "banco" e o cookie de refresh simulados, dentro de `src/mocks/`. Eles saem com os mocks, no ticket 10.
+
+### As decisões de interface dos registros continuam valendo
+
+As decisões dos registros de 10/11 e 11/11 valem para toda tela nova ou alterada. Mudar uma delas pede um registro explicando o porquê.
+
+- **Cores:** o vermelho da marca fica só no logo. Ações em verde-petróleo (`#0A6C6C`), texto em azul-marinho (`#12303F`), avisos em âmbar (`#6E4400` sobre `#FFF1CC`) e erros de formulário em ferrugem (`#A63D00`), nunca em vermelho. As cores do vermelho ao verde (`--nota-1` a `--nota-5`) aparecem só na escala de 1 a 5 e nos indicadores que a repetem. As cores ficam em `src/styles/globals.css`; não crie outras soltas nos componentes.
+- **Rostinhos:** a escala de 1 a 5 usa as ilustrações coloridas do Microsoft Fluent Emoji de `src/assets/emojis/` (licença MIT), nunca ícones de linha (lucide `Smile`, `Frown`...) nem o emoji do sistema. Cada nível tem rosto, texto e cor (1 Muito ruim, 2 Ruim, 3 Regular, 4 Bom, 5 Muito bom), sempre na mesma direção, e o rótulo completo para leitor de tela ("4, Bom"). Os mesmos rostinhos aparecem no painel e na TV.
+- **Acessibilidade:** contraste AA da WCAG em tudo, inclusive sobre as cores da escala. Na pesquisa, botões de no mínimo 48 px e texto de pelo menos 18 px. Navegação completa por teclado, com foco sempre visível, e rótulos para leitor de tela. Respeito a `prefers-reduced-motion`. Contagens regressivas anunciadas ao leitor de tela uma vez só. O zoom do navegador só é bloqueado no totem.
+- **Fonte:** Lexend, que tem o zero sem corte (importa na escala de 0 a 10).
+- **Texto:** o paciente nunca vê termos internos ("NPS", "classificação baixa", "detrator"); frases curtas, tratando por "você", sem siglas. No painel, os números vêm explicados, e o NPS aparece sempre com o número de respostas ao lado.
+- **Pesquisa:** o toque na nota de 0 a 10 seleciona e "Enviar avaliação" confirma. "Voltar" fica sempre à esquerda e "Pular", à direita. Elogio tem o mesmo destaque que reclamação.
+- **Dados pessoais na tela:** a TV nunca mostra comentário, reclamação, telefone ou outro dado pessoal. O telefone aparece sempre mascarado (`•••• 0042`); o número completo, só em "Revelar telefone", para quem tem `contatos:ver`.
+- **Desempenho:** cada área (pesquisa, totem, painel, TV) é carregada sob demanda. Quem abre a pesquisa pelo QR Code não baixa gráficos nem nada do painel.
+- **Revisão:** ao terminar uma área ou uma tela nova, revise com a skill `web-design-guidelines` e corrija o que ela apontar, ou registre por que não corrigiu (seção 2 do plano do front).
+
+### Idioma, nomes e pastas
+
+- **Domínio em português** (`setores`, `perguntas`, `respostas`, `classificacao`); **termos técnicos em inglês** (`hook`, `store`, `schema`, `query`). Identificadores sem acentos; textos para o usuário em português correto, com acentos.
+- Componentes React em PascalCase (`EscalaNps.tsx`), hooks como `useFluxoPesquisa.ts` e os demais arquivos em minúsculas, com hífen quando precisar (`query-client.ts`).
+- Código organizado por assunto: cada um em `src/features/<assunto>/`, com `api.ts`, `hooks/`, `components/`, `pages/` e `schemas.ts` quando precisar. O que várias áreas usam fica em `src/components/` e `src/lib/`. `src/components/ui/` é código gerado pelo shadcn/ui.
+- Formulários com React Hook Form e Zod, com mensagens em português. A validação do front só avisa antes do envio; quem decide é a API.
+
+### Contrato com a API
+
+- **O front só conhece a API pelo `openapi.json`**, gerado e commitado pela API (`../fhdod-satisfacao-api/openapi.json`). O front nunca copia código do backend.
+- **Uma funcionalidade que mexe nos dois lados vira dois PRs ligados:** o da API entra primeiro, com o `openapi.json` atualizado; depois o do front, com os tipos regenerados. Os dois PRs se citam na descrição.
+- Campo que a tela precisa e o contrato não tem se combina com a API, nunca se inventa no front. Exemplo: o `temRespostas` da pergunta, anotado no registro de 10/11.
+- Os códigos de erro que o front trata são os sete do contrato: `VALIDACAO`, `NAO_AUTENTICADO`, `SEM_PERMISSAO`, `NAO_ENCONTRADO`, `CONFLITO`, `LIMITE_ATINGIDO` e `ERRO_INTERNO`.
+
+## Segurança e LGPD
+
+- **Nenhum segredo no Git.** O `.env` nunca é commitado; quando o `.env.example` chegar (ticket 04), ele traz só os nomes das variáveis e exemplos falsos.
+- **Nenhum dado real de paciente**, em lugar nenhum: dados simulados, testes, prints, issues, PRs e registros usam só dados inventados, com telefones claramente fictícios.
+- Telefone, senha e tokens não vão para o `console` nem para mensagens de erro. O único token que aparece num endereço é o da TV, e ele fica depois do `#`, a parte que o navegador nunca envia ao servidor.
+- Ao usar uma ferramenta de IA, não cole nela o `.env`, dados reais nem logs de produção.
+
+## Comandos do projeto
+
+Node.js 22 ou mais recente e pnpm 12 (a versão fica em `packageManager`; sem o pnpm instalado, use `corepack pnpm`). O passo a passo para rodar está no [README](README.md), com os endereços de cada área.
+
+| Comando | O que faz |
+| --- | --- |
+| `pnpm install` | Instala as dependências |
+| `pnpm dev` | Servidor de desenvolvimento em `http://localhost:5173` |
+| `pnpm build` | Gera o site estático em `dist/` |
+| `pnpm preview` | Serve o `dist/` para conferir o build |
+| `pnpm lint` | ESLint |
+| `pnpm typecheck` | Checagem de tipos do TypeScript |
+| `pnpm test` | Testes (Vitest) |
+| `pnpm format` | Formata o código de `src/` com o Prettier |
+
+- **Dados simulados:** enquanto a API não chega, `?falha=tudo` (toda chamada falha) e `?falha=envio` (o primeiro envio da pesquisa é gravado, mas a confirmação não chega) testam as telas de erro. A tela de login tem atalhos para entrar como cada perfil, e o Super Admin volta aos dados iniciais pelo menu do usuário, em "Restaurar dados de demonstração".
+
+## Onde estão as coisas
+
+| O quê | Onde |
+| --- | --- |
+| Regras de negócio, contrato e arquitetura | [Plano de Desenvolvimento](https://github.com/GabrielPittaBr/fhdod-satisfacao-api/blob/develop/docs/Plano%20de%20Desenvolvimento%20-%20FHDOD.md), no repositório da API |
+| Telas, interface, dispositivos e acessibilidade | [`docs/plano-frontend.md`](docs/plano-frontend.md) |
+| Tickets | [`docs/tickets/`](docs/tickets/) e as issues do GitHub |
+| Registros das entregas e decisões de interface | [`docs/registros/`](docs/registros/) |
+| Tipos do contrato e erro padrão | [`src/lib/api/`](src/lib/api/) |
+| Dados simulados e as regras que serão da API | [`src/mocks/`](src/mocks/) |
+| Cores, fonte e temas | [`src/styles/globals.css`](src/styles/globals.css) |
+| Configuração do Claude Code para o time | [`.claude/settings.json`](.claude/settings.json) |
+| API | `../fhdod-satisfacao-api`, com o próprio `AGENTS.md` |

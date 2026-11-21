@@ -147,3 +147,6 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Claude Code: configuração pessoal (a do time fica em .claude/settings.json)
+.claude/settings.local.json
