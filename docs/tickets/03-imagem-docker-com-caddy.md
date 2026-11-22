@@ -6,13 +6,13 @@
 
 **Bloqueado por:** 01 — Configuração dos agentes e do fluxo de trabalho
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Critérios de aceite:**
 
-- [ ] Dockerfile em múltiplos estágios: gera o build com pnpm numa imagem completa e copia só o resultado para a imagem do Caddy.
-- [ ] O Caddyfile recebe o domínio por variável, emite e renova o HTTPS sozinho, comprime as respostas e repassa `/api/*` para o serviço da API.
-- [ ] Qualquer rota que não seja arquivo nem `/api` devolve o `index.html`, para `/s/...`, `/totem/...`, `/tv` e `/painel/...` abrirem direto.
-- [ ] Arquivos com hash no nome ficam em cache longo, e o `index.html`, sem cache.
-- [ ] Na máquina local, a imagem roda sem domínio público, para ser testada com o compose da API.
-- [ ] O README do front explica como gerar e rodar a imagem.
+- [x] Dockerfile em múltiplos estágios: gera o build com pnpm numa imagem completa e copia só o resultado para a imagem do Caddy.
+- [x] O Caddyfile recebe o domínio por variável, emite e renova o HTTPS sozinho, comprime as respostas e repassa `/api/*` para o serviço da API.
+- [x] Qualquer rota que não seja arquivo nem `/api` devolve o `index.html`, para `/s/...`, `/totem/...`, `/tv` e `/painel/...` abrirem direto.
+- [x] Arquivos com hash no nome ficam em cache longo, e o `index.html`, sem cache.
+- [x] Na máquina local, a imagem roda sem domínio público, para ser testada com o compose da API.
+- [x] O README do front explica como gerar e rodar a imagem.
