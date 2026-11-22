@@ -46,9 +46,86 @@ Para testar as telas de erro, acrescente ao endereço `?falha=tudo` (toda chamad
 
 O Super Admin pode voltar aos dados iniciais pelo menu do usuário, em "Restaurar dados de demonstração".
 
-## Publicar
+## Imagem Docker
 
-O build é um site estático. `vercel.json` (Vercel) e `public/_redirects` (Netlify e Cloudflare Pages) fazem os links diretos abrirem ao recarregar a página.
+Em homologação e produção, o front é uma imagem Docker: o Caddy serve o site com HTTPS automático e repassa `/api` para a API, no mesmo domínio. Quem sobe tudo junto é o compose de produção da API (ticket 19 de lá), que gera esta imagem a partir desta pasta; por isso os dois repositórios ficam lado a lado também no servidor.
+
+```bash
+docker build -t fhdod-satisfacao-web .
+```
+
+O build acontece dentro do Docker, com o Node 26 e o pnpm do `packageManager`: não precisa de `pnpm install` na máquina. A imagem final tem só o Caddy, o [`Caddyfile`](Caddyfile) e os arquivos do `dist/`.
+
+### Rodar na máquina, sem domínio
+
+```bash
+docker run --rm -p 8080:80 fhdod-satisfacao-web
+```
+
+Abra `http://localhost:8080/s/pronto-atendimento`. Sem `DOMAIN`, o Caddy serve em HTTP na porta 80 do container e avisa no log que não há HTTPS, o que é o esperado na máquina. Enquanto as telas usam os dados simulados, a imagem funciona sozinha; só o `/api` precisa da API no ar.
+
+Com a API rodando na máquina (`docker compose up -d` e `pnpm dev`, na pasta da API):
+
+```bash
+docker run --rm -p 8080:80 --add-host=host.docker.internal:host-gateway \
+  -e API_UPSTREAM=host.docker.internal:3333 fhdod-satisfacao-web
+```
+
+`http://localhost:8080/api/health` passa pelo Caddy e responde `{"data":{"status":"ok","banco":"ok"}}`.
+
+Para ver o HTTPS na máquina, rode com `-e DOMAIN=localhost -p 8443:443` e abra `https://localhost:8443`. O certificado vem da autoridade do próprio Caddy, que o navegador não conhece: o aviso de certificado é o esperado.
+
+### Variáveis
+
+| Variável | Padrão | Para quê |
+| --- | --- | --- |
+| `DOMAIN` | nenhum: HTTP na porta 80 | Domínio do site, como `pesquisa.exemplo.com.br`. Com ele, o Caddy emite e renova o HTTPS sozinho e manda o HTTP para o HTTPS |
+| `API_UPSTREAM` | `api:3333` | Para onde vai o `/api`: o serviço e a porta da API no compose de produção |
+
+`DOMAIN` vazio não é o mesmo que sem `DOMAIN`: com `DOMAIN=`, o Caddy não sobe e acusa `unrecognized global option`. No compose, use `${DOMAIN:?defina o DOMAIN no .env}`, que para com uma mensagem clara quando a variável falta ou está vazia. Para testar o compose na máquina, `DOMAIN=:80` serve em HTTP, e `DOMAIN=localhost`, em HTTPS com o certificado do próprio Caddy.
+
+### No servidor
+
+O compose de produção da API cuida disto, mas a imagem precisa de:
+
+- `DOMAIN` com o domínio, e o DNS dele apontando para o servidor;
+- as portas 80 e 443 abertas, e a 443/udp, para o HTTP/3;
+- um volume em `/data`, onde ficam os certificados. Sem ele, cada container novo pede outro certificado, e o Let's Encrypt limita as emissões por semana. Outro volume em `/config` guarda a configuração que o Caddy salva;
+- a API como serviço `api`, na porta 3333 e na mesma rede, ou o `API_UPSTREAM` apontando para ela.
+
+Por exemplo, num compose em `infra/`, no repositório da API (os caminhos são relativos à pasta do arquivo):
+
+```yaml
+caddy:
+  build: ../../fhdod-satisfacao-web
+  environment:
+    DOMAIN: ${DOMAIN:?defina o DOMAIN no .env}
+  ports:
+    - 80:80
+    - 443:443
+    - 443:443/udp
+  volumes:
+    - caddy-dados:/data
+    - caddy-config:/config
+  depends_on:
+    api:
+      condition: service_healthy
+```
+
+### O que o Caddy responde
+
+| Endereço | Resposta | Cache no navegador |
+| --- | --- | --- |
+| `/api` e `/api/*` | Repassado para a API, com o caminho inteiro | O que a API mandar |
+| `/assets/*` | Arquivo do build, com hash no nome; 404 se não existir | Um ano (`immutable`): o nome muda quando o arquivo muda |
+| Arquivo que existe, como `/favicon.svg` | O arquivo | Conferido a cada acesso (`no-cache`) |
+| Qualquer outro caminho: `/s/...`, `/totem/...`, `/tv`, `/painel/...` | O `index.html`, para o link abrir direto e ao recarregar | Conferido a cada acesso (`no-cache`), para uma versão nova chegar na hora |
+
+O que é texto (HTML, JS, CSS, JSON e SVG) sai comprimido com zstd ou gzip, conforme o navegador aceitar.
+
+### Hospedagem estática
+
+O build também é um site estático comum, que pode ir para uma hospedagem estática numa demonstração, sem a API: `vercel.json` (Vercel) e `public/_redirects` (Netlify e Cloudflare Pages) fazem os links diretos abrirem ao recarregar a página.
 
 ## Documentos
 

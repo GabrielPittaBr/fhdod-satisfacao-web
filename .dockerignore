@@ -1,0 +1,31 @@
+# O que fica fora do contexto do docker build: o que o site não usa e o que não pode entrar na imagem.
+
+# Dependências e resultados gerados na máquina: a imagem instala e gera os seus.
+node_modules
+dist
+coverage
+.pnpm-store
+.vite
+*.tsbuildinfo
+
+# Segredos: nenhum .env entra na imagem. O Vite embutiria no site as variáveis VITE_* que achasse neles.
+.env
+.env.*
+
+# Git, CI, editores e agentes.
+.git
+.github
+.husky
+.claude
+.vscode
+.idea
+
+# Documentação, testes e logs: não fazem parte do site.
+docs
+tests
+*.md
+*.log
+
+# A própria configuração do Docker.
+Dockerfile
+.dockerignore

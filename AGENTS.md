@@ -219,6 +219,7 @@ Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fic
 | Dados simulados e as regras que serão da API | [`src/mocks/`](src/mocks/) |
 | Cores, fonte e temas | [`src/styles/globals.css`](src/styles/globals.css) |
 | CI e modelo de pull request | [`.github/`](.github/) |
+| Imagem Docker e Caddy: HTTPS, repasse de `/api` e cache | [`Dockerfile`](Dockerfile), [`Caddyfile`](Caddyfile) e o README, em "Imagem Docker" |
 | Hooks do Git e regras das mensagens de commit | [`.husky/`](.husky/) e [`commitlint.config.js`](commitlint.config.js) |
 | Configuração do Claude Code para o time | [`.claude/settings.json`](.claude/settings.json) |
 | API | `../fhdod-satisfacao-api`, com o próprio `AGENTS.md` |

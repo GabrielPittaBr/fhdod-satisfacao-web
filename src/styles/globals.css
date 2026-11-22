@@ -1,4 +1,6 @@
-@import 'tailwindcss';
+/* O Tailwind procura as classes só em src/: sem isso, ele lia também a documentação e o CI e gerava classes que
+   nenhuma tela usa (como .contents, do "contents: read" do ci.yml), e o build da imagem Docker saía diferente. */
+@import 'tailwindcss' source('..');
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/lexend/wght.css';
