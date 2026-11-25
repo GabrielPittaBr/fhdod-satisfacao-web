@@ -195,7 +195,7 @@ As decisões dos registros de 10/11 e 11/11 valem para toda tela nova ou alterad
 
 ## Comandos do projeto
 
-Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fica em `packageManager`; sem o pnpm instalado, use `corepack pnpm`). Com outra versão do Node, o pnpm só avisa; o CI usa sempre a do `.nvmrc`. O passo a passo para rodar está no [README](README.md), com os endereços de cada área.
+Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fica em `packageManager`; sem o pnpm instalado, `npm install --global pnpm@12`, porque o Node 26 não traz mais o Corepack). Com outra versão do Node, o pnpm só avisa; o CI usa sempre a do `.nvmrc`. O passo a passo para rodar está no [README](README.md), com os endereços de cada área.
 
 | Comando | O que faz |
 | --- | --- |
