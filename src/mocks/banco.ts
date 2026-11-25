@@ -1,4 +1,6 @@
-// "Banco" do mock. Faz o papel do servidor para o painel e a TV: os cadastros ficam no localStorage.
+// "Banco" do mock. Faz o papel do servidor para os indicadores, as respostas e a TV, no localStorage.
+// Os cadastros já vêm da API (ticket 06): os setores, as categorias, os turnos e as perguntas daqui só dão nome
+// e forma às respostas simuladas.
 // Limitação conhecida: só vale dentro do mesmo navegador.
 // A pesquisa do paciente já grava na API (ticket 04): as `respostasNovas` são só as que a pesquisa simulada
 // gravou neste navegador antes disso, e saem com os mocks no ticket 10.
@@ -6,7 +8,6 @@ import type {
   Canal,
   Categoria,
   Classificacao,
-  Perfil,
   Pergunta,
   Setor,
   TelaTv,
@@ -14,7 +15,7 @@ import type {
   TipoPergunta,
   Turno,
 } from '@/lib/api/tipos'
-import { CATEGORIAS, CONFIGURACOES, PERGUNTAS, SETORES, TURNOS, TV_TELAS, USUARIOS } from './seed/dados'
+import { CATEGORIAS, CONFIGURACOES, PERGUNTAS, SETORES, TURNOS, TV_TELAS } from './seed/dados'
 import { gerarHistorico } from './seed/historico'
 
 export interface RespostaBanco {
@@ -39,25 +40,12 @@ export interface RespostaBanco {
   contato: { id: number; telefone: string; consentimentoEm: string } | null
 }
 
-export interface UsuarioBanco {
-  id: number
-  nome: string
-  email: string
-  senha: string
-  perfil: Perfil
-  ativo: boolean
-  trocarSenha: boolean
-  setorIds: number[]
-  ultimoLoginEm: string | null
-}
-
 export interface Banco {
   versao: number
   setores: Setor[]
   categorias: Categoria[]
   turnos: Turno[]
   perguntas: Omit<Pergunta, 'temRespostas'>[]
-  usuarios: UsuarioBanco[]
   tvTelas: (TelaTv & { token: string })[]
   configuracoes: typeof CONFIGURACOES
   respostasNovas: RespostaBanco[]
@@ -77,11 +65,6 @@ function inicial(): Banco {
     categorias: CATEGORIAS,
     turnos: TURNOS,
     perguntas: PERGUNTAS,
-    usuarios: USUARIOS.map(({ demo: _demo, ...usuario }) => ({
-      ...usuario,
-      ativo: true,
-      ultimoLoginEm: null,
-    })),
     tvTelas: TV_TELAS,
     configuracoes: CONFIGURACOES,
     respostasNovas: [],

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
-import { KeyRound, Pencil, Plus } from 'lucide-react'
+import { KeyRound, Pencil, Plus, TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { listarSetores } from '@/features/setores/api'
+import { mensagemDeErro } from '@/lib/api/erro'
 import type { Perfil, Usuario } from '@/lib/api/tipos'
 import { dataHora } from '@/lib/format'
 import { ROTULO_PERFIL } from '@/lib/rotulos'
@@ -60,6 +61,8 @@ function Formulario({
   aoCriar: (senha: Senha) => void
 }) {
   const setores = useQuery({ queryKey: ['setores'], queryFn: listarSetores })
+  // a API recusa (409): o Super Admin que se rebaixasse perderia o acesso aos usuários
+  const propriaConta = useSessao((s) => usuario !== null && s.sessao?.usuario.id === usuario.id)
   const form = useForm<Dados>({
     resolver: zodResolver(esquema),
     defaultValues: {
@@ -82,8 +85,21 @@ function Formulario({
         return null
       }
       const criado = await criarUsuario({ nome: d.nome, email: d.email, perfil: d.perfil })
-      await definirSetores(criado.usuario.id, setorIds)
-      return { nome: criado.usuario.nome, email: criado.usuario.email, senha: criado.senhaProvisoria }
+      const senha: Senha = {
+        nome: criado.usuario.nome,
+        email: criado.usuario.email,
+        senha: criado.senhaProvisoria,
+      }
+      // A conta já existe e a senha provisória não volta mais: se os setores falharem, ela aparece mesmo
+      // assim, com o aviso para escolher os setores de novo em "Editar".
+      if (setorIds.length > 0) {
+        try {
+          await definirSetores(criado.usuario.id, setorIds)
+        } catch (erro) {
+          return { ...senha, erroNosSetores: mensagemDeErro(erro) }
+        }
+      }
+      return senha
     },
     {
       recarregar: ['usuarios'],
@@ -127,7 +143,8 @@ function Formulario({
       />
       <CampoSelecao
         rotulo="Perfil"
-        dica={O_QUE_FAZ[perfil]}
+        disabled={propriaConta}
+        dica={propriaConta ? `${O_QUE_FAZ[perfil]} Você não pode mudar o próprio perfil.` : O_QUE_FAZ[perfil]}
         erro={erros.perfil?.message}
         {...form.register('perfil')}
       >
@@ -166,6 +183,8 @@ interface Senha {
   nome: string
   email: string
   senha: string
+  /** A conta foi criada, mas os setores não foram gravados. */
+  erroNosSetores?: string
 }
 
 /** A senha provisória aparece uma única vez, logo depois de criada. */
@@ -179,6 +198,18 @@ function SenhaProvisoria({ dados, aoFechar }: { dados: Senha; aoFechar: () => vo
             Anote ou copie agora: ela não aparece de novo. No primeiro acesso, o sistema pede uma senha nova.
           </DialogDescription>
         </DialogHeader>
+        {dados.erroNosSetores && (
+          <p
+            role="alert"
+            className="flex items-start gap-2 rounded-lg border border-aviso-borda bg-aviso-fundo px-3 py-2 text-sm text-aviso"
+          >
+            <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+            <span>
+              A conta foi criada, mas os setores não foram salvos ({dados.erroNosSetores}). Depois de anotar a
+              senha, use &quot;Editar&quot; para escolher os setores de novo.
+            </span>
+          </p>
+        )}
         <CampoCopiavel rotulo="E-mail" valor={dados.email} />
         <CampoCopiavel rotulo="Senha provisória" valor={dados.senha} />
         <DialogFooter>

@@ -1,7 +1,7 @@
-// Tipos do contrato da API. A pesquisa pública, a sessão do painel e o erro padrão já vêm do schema.d.ts,
-// gerado do openapi.json por `pnpm api:tipos`. O resto ainda é escrito à mão, com os mesmos nomes de campo do
-// Plano de Desenvolvimento, e troca de lugar quando a sua área for ligada à API (tickets 06 a 09).
-import type { components } from './schema'
+// Tipos do contrato da API. A pesquisa pública, a sessão do painel, os cadastros e o erro padrão já vêm do
+// schema.d.ts, gerado do openapi.json por `pnpm api:tipos`. O resto ainda é escrito à mão, com os mesmos nomes
+// de campo do Plano de Desenvolvimento, e troca de lugar quando a sua área for ligada à API (tickets 07 a 09).
+import type { components, paths } from './schema'
 
 type Contrato = components['schemas']
 
@@ -33,56 +33,25 @@ export interface Lista<T> {
 
 export type DetalheErro = Contrato['DetalheErro']
 
-// ---------- Cadastros ----------
+/** O corpo JSON que uma rota do contrato recebe: `CorpoDe<'/api/v1/setores', 'post'>`. */
+export type CorpoDe<Caminho extends keyof paths, Metodo extends 'post' | 'put' | 'patch'> =
+  NonNullable<paths[Caminho][Metodo]> extends {
+    requestBody?: { content: { 'application/json': infer Corpo } }
+  }
+    ? Corpo
+    : never
 
-export interface Setor {
-  id: number
-  nome: string
-  slug: string
-  descricao: string | null
-  ativo: boolean
-}
+// ---------- Cadastros: do contrato gerado ----------
 
-export interface Categoria {
-  id: number
-  nome: string
-  ordem: number
-  ativa: boolean
-}
+export type Setor = Contrato['Setor']
+export type Categoria = Contrato['Categoria']
+/** `horaInicio` e `horaFim` em "HH:mm"; o fim é menor que o início quando o turno atravessa a meia-noite. */
+export type Turno = Contrato['Turno']
+/** Com `temRespostas`, o tipo não pode mais mudar. */
+export type Pergunta = Contrato['Pergunta']
+export type Usuario = Contrato['Usuario']
 
-export interface Turno {
-  id: number
-  nome: string
-  /** "HH:mm" */
-  horaInicio: string
-  /** "HH:mm"; menor que horaInicio quando o turno atravessa a meia-noite */
-  horaFim: string
-  ordem: number
-}
-
-export interface Pergunta {
-  id: number
-  setorId: number
-  categoriaId: number
-  texto: string
-  tipo: TipoPergunta
-  opcoes: string[] | null
-  ordem: number
-  ativa: boolean
-  /** Com respostas gravadas, o tipo não pode mais mudar. */
-  temRespostas: boolean
-}
-
-export interface Usuario {
-  id: number
-  nome: string
-  email: string
-  perfil: Perfil
-  ativo: boolean
-  trocarSenha: boolean
-  setorIds: number[]
-  ultimoLoginEm: string | null
-}
+// ---------- TV Wall: telas ----------
 
 export interface TelaTv {
   id: number

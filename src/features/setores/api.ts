@@ -1,16 +1,29 @@
-import { comToken } from '@/features/auth/api'
-import * as mock from '@/mocks/cadastros'
+// Setores, na API. Qualquer perfil lista os setores que enxerga; só o Super Admin cria, edita e desativa.
+import { pedirComToken } from '@/features/auth/api'
+import { api } from '@/lib/api/cliente'
+import type { CorpoDe } from '@/lib/api/tipos'
 
-export type { DadosSetor } from '@/mocks/cadastros'
+export type DadosSetor = CorpoDe<'/api/v1/setores', 'post'>
 
-/** GET /setores (só os que o usuário enxerga) */
-export const listarSetores = () => comToken(async (t) => (await mock.listarSetores(t)).data)
+/** GET /setores (só os que o usuário enxerga, ativos e inativos, em ordem alfabética) */
+export const listarSetores = async () =>
+  (await pedirComToken((headers) => api.GET('/api/v1/setores', { headers }))).data
+
 /** POST /setores */
-export const criarSetor = (dados: mock.DadosSetor) =>
-  comToken(async (t) => (await mock.criarSetor(t, dados)).data)
-/** PATCH /setores/:id */
-export const editarSetor = (id: number, dados: mock.DadosSetor) =>
-  comToken(async (t) => (await mock.editarSetor(t, id, dados)).data)
+export const criarSetor = async (dados: DadosSetor) =>
+  (await pedirComToken((headers) => api.POST('/api/v1/setores', { body: dados, headers }))).data
+
+/** PATCH /setores/:id (só os campos enviados mudam) */
+export const editarSetor = async (id: number, dados: CorpoDe<'/api/v1/setores/{id}', 'patch'>) =>
+  (
+    await pedirComToken((headers) =>
+      api.PATCH('/api/v1/setores/{id}', { params: { path: { id } }, body: dados, headers }),
+    )
+  ).data
+
 /** PATCH /setores/:id/status */
-export const alterarStatusSetor = (id: number, ativo: boolean) =>
-  comToken((t) => mock.alterarStatusSetor(t, id, ativo))
+export const alterarStatusSetor = async (id: number, ativo: boolean) => {
+  await pedirComToken((headers) =>
+    api.PATCH('/api/v1/setores/{id}/status', { params: { path: { id } }, body: { ativo }, headers }),
+  )
+}

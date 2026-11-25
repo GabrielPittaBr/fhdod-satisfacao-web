@@ -1,22 +1,38 @@
-import { comToken } from '@/features/auth/api'
-import * as mock from '@/mocks/cadastros'
+// Categorias e turnos, na API. Qualquer perfil lista; só o Super Admin cria e edita.
+import { pedirComToken } from '@/features/auth/api'
+import { api } from '@/lib/api/cliente'
+import type { CorpoDe } from '@/lib/api/tipos'
 
-export type { DadosTurno } from '@/mocks/cadastros'
+export type DadosTurno = CorpoDe<'/api/v1/turnos', 'post'>
 
-/** GET /categorias */
-export const listarCategorias = () => comToken(async (t) => (await mock.listarCategorias(t)).data)
+/** GET /categorias (ativas e inativas, na ordem) */
+export const listarCategorias = async () =>
+  (await pedirComToken((headers) => api.GET('/api/v1/categorias', { headers }))).data
+
 /** POST /categorias */
-export const criarCategoria = (nome: string) =>
-  comToken(async (t) => (await mock.criarCategoria(t, { nome })).data)
-/** PATCH /categorias/:id (edita ou desativa) */
-export const editarCategoria = (id: number, dados: { nome?: string; ativa?: boolean }) =>
-  comToken(async (t) => (await mock.editarCategoria(t, id, dados)).data)
+export const criarCategoria = async (nome: string) =>
+  (await pedirComToken((headers) => api.POST('/api/v1/categorias', { body: { nome }, headers }))).data
 
-/** GET /turnos */
-export const listarTurnos = () => comToken(async (t) => (await mock.listarTurnos(t)).data)
+/** PATCH /categorias/:id (edita ou desativa) */
+export const editarCategoria = async (id: number, dados: CorpoDe<'/api/v1/categorias/{id}', 'patch'>) =>
+  (
+    await pedirComToken((headers) =>
+      api.PATCH('/api/v1/categorias/{id}', { params: { path: { id } }, body: dados, headers }),
+    )
+  ).data
+
+/** GET /turnos (na ordem) */
+export const listarTurnos = async () =>
+  (await pedirComToken((headers) => api.GET('/api/v1/turnos', { headers }))).data
+
 /** POST /turnos */
-export const criarTurno = (dados: mock.DadosTurno) =>
-  comToken(async (t) => (await mock.criarTurno(t, dados)).data)
-/** PATCH /turnos/:id */
-export const editarTurno = (id: number, dados: mock.DadosTurno) =>
-  comToken(async (t) => (await mock.editarTurno(t, id, dados)).data)
+export const criarTurno = async (dados: DadosTurno) =>
+  (await pedirComToken((headers) => api.POST('/api/v1/turnos', { body: dados, headers }))).data
+
+/** PATCH /turnos/:id (o turno inteiro: o nome e os dois horários) */
+export const editarTurno = async (id: number, dados: DadosTurno) =>
+  (
+    await pedirComToken((headers) =>
+      api.PATCH('/api/v1/turnos/{id}', { params: { path: { id } }, body: dados, headers }),
+    )
+  ).data
