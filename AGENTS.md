@@ -133,13 +133,13 @@ Quando a entrega mexe em telas, entra também **Como foi verificado**: os fluxos
 
 ```text
 componente → hook (TanStack Query) → features/<assunto>/api.ts → cliente HTTP → API
-                                                  (exportação, por enquanto: src/mocks/)
 ```
 
-- **Só o `api.ts` de cada assunto conversa com a API** e, enquanto ela não chega, com `src/mocks/`. Componentes, páginas e hooks nunca chamam `fetch`, o cliente HTTP nem os mocks diretamente.
+- **Só o `api.ts` de cada assunto conversa com a API.** Componentes, páginas e hooks nunca chamam `fetch` nem o cliente HTTP diretamente.
 - Cada função do `api.ts` corresponde a um endpoint do contrato: `buscarPesquisa(slug)` ↔ `GET /publico/setores/:slug/pesquisa`.
 - O `api.ts` chama a API pelo cliente de `src/lib/api/cliente.ts` (openapi-fetch, tipado pelo `schema.d.ts`), sempre dentro de `pedir(...)`: ele devolve o corpo do sucesso ou lança o `ErroApi`. Os endereços são os do contrato, com o `/api/v1` na frente, e vão ao mesmo domínio do site.
 - As chamadas do painel usam `pedirComToken(...)` (`src/features/auth/api.ts`) no lugar do `pedir`: ele põe o token de acesso no `Authorization` e, num 401, renova a sessão uma única vez e repete a chamada. Se a renovação falha, a sessão acaba e o painel volta para o login. As renovações da aba saem uma de cada vez, porque a API troca o refresh a cada uso. Os `api.ts` dos cadastros (`setores`, `cadastros`, `perguntas` e `usuarios`) mostram o uso.
+- As rotas que devolvem um arquivo (as exportações) vão com `parseAs: 'blob'` pelo `pedirArquivoComToken(...)`, que devolve o arquivo e o nome que a API mandou no `Content-Disposition`; o erro antes do arquivo chega em JSON e vira o `ErroApi` de sempre. A página só salva o arquivo (`src/features/dashboard/`).
 - A tela da TV é a exceção: não tem login e manda o token do link no cabeçalho `X-Tv-Token`, pelo `pedir`, sem a sessão do painel. Nela, o 401 quer dizer que a tela foi desativada, não que a sessão acabou (`src/features/tv-wall/api.ts`).
 - O corpo que uma rota recebe vem do contrato, com o `CorpoDe<'/api/v1/setores', 'post'>` de `src/lib/api/tipos.ts`, e os filtros da query string, com o `ConsultaDe<'/api/v1/respostas'>`, sem tipo escrito à mão. Os `api.ts` do dashboard, das respostas e dos contatos mostram o uso.
 - Os testes de cada `api.ts` usam a API de mentira de `src/test/api-falsa.ts`: as rotas previstas, a resposta de cada uma e a conferência do método, do caminho, do corpo e da query string enviados. As rotas sem a sessão do painel, como a da TV, vão em `usarApiFalsa({ semSessao: [...] })`.
@@ -156,7 +156,7 @@ componente → hook (TanStack Query) → features/<assunto>/api.ts → cliente H
 
 - O estado da pesquisa vive no `useReducer` do `useFluxoPesquisa` e some ao reiniciar. **Nada da pesquisa vai para `localStorage`, `sessionStorage`, cookie ou URL**, nem a chave de idempotência: no totem, o próximo paciente não pode ver nada do anterior.
 - O token de acesso do painel fica só em memória (Zustand); ao recarregar, a sessão volta pelo refresh, que fica no cookie HttpOnly da API: o front nunca o lê nem o guarda. Ao sair, ou quando a sessão acaba, o cache do TanStack Query é apagado, para quem entrar depois não ver os dados de quem saiu.
-- Hoje o `localStorage` guarda só o "banco" simulado, dentro de `src/mocks/`. Ele sai com os mocks, no ticket 10.
+- O front não guarda nada no `localStorage`. O "banco" simulado de `src/mocks/`, que nenhuma tela usa mais, sai com os mocks no ticket 10.
 
 ### As decisões de interface dos registros continuam valendo
 
@@ -218,7 +218,8 @@ Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fic
 - **Cadastros:** setores, categorias, turnos, perguntas e usuários são os da API. Para a pesquisa abrir, cadastre no painel um setor com perguntas (README, em "Com a API").
 - **Indicadores, respostas e pedidos de retorno:** são os da API. Para terem o que mostrar, rode os dados de demonstração da API (`pnpm db:demo`, README, em "Com a API") ou responda a pesquisa de um setor cadastrado.
 - **TV:** os números e as telas são os da API. Os dados de demonstração de lá abrem em `/tv#demo-recepcao-fhdod`; outras telas se criam no painel, em "Telas de TV", com o link mostrado uma vez só.
-- **Dados simulados:** enquanto as exportações não são ligadas à API, `?falha=tudo` (toda chamada simulada falha) testa as telas de erro delas. Os mocks usam as permissões e os setores da sessão real (`src/mocks/auth.ts`), um ajuste provisório que sai no ticket 10. Para voltar aos dados simulados iniciais, apague o `localStorage` do site.
+- **Exportações:** o resumo em Excel e em PDF e as respostas em Excel são gerados pela API, com os filtros da tela; o telefone só vai para quem tem `contatos:ver`, e quem decide é a API.
+- **Dados simulados:** nenhuma tela usa mais `src/mocks/`, e o `?falha=tudo` deixou de ter efeito. A pasta sai inteira no ticket 10.
 
 ## Onde estão as coisas
 

@@ -1,7 +1,7 @@
 // Autenticação do painel, na API: login, sessão, renovação, saída e troca de senha.
 // O token de acesso fica só em memória (stores/sessao); o refresh fica no cookie HttpOnly, que só a API lê
 // e que o navegador manda sozinho às rotas de /api/v1/auth.
-import { api, pedir, type Resultado } from '@/lib/api/cliente'
+import { api, pedir, pedirArquivo, type Resultado } from '@/lib/api/cliente'
 import { ErroApi } from '@/lib/api/erro'
 import type { Sessao } from '@/lib/api/tipos'
 import { queryClient } from '@/lib/query-client'
@@ -60,6 +60,15 @@ export async function comToken<T>(chamada: (token: string) => Promise<T>): Promi
 export const pedirComToken = <R extends Resultado>(
   chamada: (headers: { Authorization: string }) => Promise<R>,
 ) => comToken((token) => pedir(chamada(comoBearer(token))))
+
+/**
+ * O `pedirComToken` das rotas que devolvem um arquivo (com `parseAs: 'blob'`): o arquivo e o nome que a API deu.
+ * Uso: `pedirArquivoComToken((headers) => api.GET('/api/v1/...', { headers, parseAs: 'blob' }), 'nome.xlsx')`.
+ */
+export const pedirArquivoComToken = <R extends Resultado & { data?: Blob }>(
+  chamada: (headers: { Authorization: string }) => Promise<R>,
+  nomePadrao: string,
+) => comToken((token) => pedirArquivo(chamada(comoBearer(token)), nomePadrao))
 
 /** GET /auth/me */
 const buscarSessao = (token: string) =>

@@ -177,6 +177,26 @@ describe('token em cada chamada do painel', () => {
     expect(chamadasA('/api/v1/auth/refresh')).toHaveLength(0)
     expect(useSessao.getState().sessao).toEqual(SESSAO)
   })
+
+  it('o download de um arquivo também renova num 401 e chega com o nome que a API deu', async () => {
+    const PLANILHA = '/api/v1/exportacoes/resumo.xlsx'
+    rotas.set(`GET ${PLANILHA}`, (pedido) =>
+      bearer(pedido) === 'Bearer acesso-novo'
+        ? new Response('planilha', {
+            headers: { 'Content-Disposition': 'attachment; filename="resumo.xlsx"' },
+          })
+        : naoAutenticado(),
+    )
+    rotas.set('POST /api/v1/auth/refresh', () => json(200, { data: { tokenAcesso: 'acesso-novo' } }))
+    const query = { inicio: '2026-11-01', fim: '2026-11-30', base: 'ATENDIMENTO' } as const
+    const arquivo = await auth.pedirArquivoComToken(
+      (headers) => cliente.api.GET(PLANILHA, { params: { query }, headers, parseAs: 'blob' }),
+      'padrao.xlsx',
+    )
+    expect(arquivo.nome).toBe('resumo.xlsx')
+    expect(await arquivo.conteudo.text()).toBe('planilha')
+    expect(chamadasA(PLANILHA).map(bearer)).toEqual(['Bearer acesso-velho', 'Bearer acesso-novo'])
+  })
 })
 
 describe('saída e troca de senha', () => {

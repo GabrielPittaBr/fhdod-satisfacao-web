@@ -1,10 +1,8 @@
 // Leituras do dashboard, na API. Todos os blocos recebem os mesmos filtros, e a API aplica o escopo da sessão:
-// o Gestor e o Visualizador veem só os seus setores, mesmo sem pedir um. A exportação continua simulada até o
-// ticket 09.
-import { comToken, pedirComToken } from '@/features/auth/api'
+// o Gestor e o Visualizador veem só os seus setores, mesmo sem pedir um. As exportações também, em Excel e PDF.
+import { pedirArquivoComToken, pedirComToken } from '@/features/auth/api'
 import { api } from '@/lib/api/cliente'
 import type { FiltrosDashboard, Granularidade, TipoComentario } from '@/lib/api/tipos'
-import * as mock from '@/mocks/consultas'
 
 /** GET /dashboard/resumo */
 export const buscarResumo = async (filtros: FiltrosDashboard) =>
@@ -52,7 +50,29 @@ export const buscarComentarios = (filtros: FiltrosDashboard, tipo?: TipoComentar
     api.GET('/api/v1/dashboard/comentarios', { params: { query: { ...filtros, tipo } }, headers }),
   )
 
-/** GET /exportacoes/resumo.xlsx (no mock, um CSV que o Excel abre) */
-export const exportarResumo = (f: FiltrosDashboard) => comToken((t) => mock.exportarResumo(t, f))
-/** GET /exportacoes/respostas.xlsx */
-export const exportarRespostas = (f: FiltrosDashboard) => comToken((t) => mock.exportarRespostas(t, f))
+// As exportações levam os mesmos filtros dos blocos, e a API aplica o mesmo escopo. O arquivo vem com o nome que a
+// API deu a ele; o nome padrão só vale se o `Content-Disposition` não chegar.
+
+/** GET /exportacoes/resumo.xlsx */
+export const exportarResumo = (filtros: FiltrosDashboard) =>
+  pedirArquivoComToken(
+    (headers) =>
+      api.GET('/api/v1/exportacoes/resumo.xlsx', { params: { query: filtros }, headers, parseAs: 'blob' }),
+    'fhdod-resumo.xlsx',
+  )
+
+/** GET /exportacoes/resumo.pdf */
+export const exportarResumoPdf = (filtros: FiltrosDashboard) =>
+  pedirArquivoComToken(
+    (headers) =>
+      api.GET('/api/v1/exportacoes/resumo.pdf', { params: { query: filtros }, headers, parseAs: 'blob' }),
+    'fhdod-resumo.pdf',
+  )
+
+/** GET /exportacoes/respostas.xlsx (com o telefone só para quem tem `contatos:ver`: quem decide é a API) */
+export const exportarRespostas = (filtros: FiltrosDashboard) =>
+  pedirArquivoComToken(
+    (headers) =>
+      api.GET('/api/v1/exportacoes/respostas.xlsx', { params: { query: filtros }, headers, parseAs: 'blob' }),
+    'fhdod-respostas.xlsx',
+  )

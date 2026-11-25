@@ -2,7 +2,7 @@
 
 Front-end do Sistema de Avaliação da Fundação Hospitalar Doutor Oswaldo Diesel: pesquisa de satisfação do paciente (celular, tablet e totem), painel da gestão e TV Wall.
 
-A pesquisa do paciente, o painel, os cadastros e a TV Wall já usam a [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela, a gestão entra no painel com a conta de verdade, os setores, as categorias, os turnos, as perguntas e os usuários são lidos e gravados lá, o dashboard, as respostas e os pedidos de retorno mostram os dados de lá, e a TV Wall mostra os números de lá, com as telas criadas e desativadas no painel. Uma avaliação enviada na pesquisa aparece no dashboard na atualização seguinte (a cada minuto, ou ao trocar um filtro). Só as exportações ainda usam dados simulados no próprio navegador (`src/mocks/`), até serem ligadas à API (ticket 09).
+A pesquisa do paciente, o painel, os cadastros e a TV Wall já usam a [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela, a gestão entra no painel com a conta de verdade, os setores, as categorias, os turnos, as perguntas e os usuários são lidos e gravados lá, o dashboard, as respostas e os pedidos de retorno mostram os dados de lá, a TV Wall mostra os números de lá, com as telas criadas e desativadas no painel, e as exportações do dashboard (o resumo em Excel e em PDF e as respostas em Excel) são geradas lá. Uma avaliação enviada na pesquisa aparece no dashboard na atualização seguinte (a cada minuto, ou ao trocar um filtro). Nenhuma tela usa mais os dados simulados de `src/mocks/`, que saem no ticket 10.
 
 Antes de trabalhar no repositório, leia o [`AGENTS.md`](AGENTS.md): fluxo de branches, padrão de commits, tickets, definição de pronto e as regras que já valem no front. As regras de negócio estão no [Plano de Desenvolvimento](https://github.com/GabrielPittaBr/fhdod-satisfacao-api/blob/develop/docs/Plano%20de%20Desenvolvimento%20-%20FHDOD.md), no repositório da API.
 
@@ -46,7 +46,7 @@ Sem eles, cadastre pelo próprio painel, com o Super Admin, o que a pesquisa e o
 - para o dashboard, as respostas, os pedidos de retorno e a TV terem o que mostrar, avaliações respondidas na pesquisa. O telefone para retorno é oferecido na avaliação baixa;
 - para a TV, uma tela, em "Telas de TV": o link dela, com o token depois do `#`, aparece uma vez só, ao criar a tela.
 
-A exportação, ainda simulada, usa as permissões e os setores da sessão de verdade, com os dados simulados de `src/mocks/`: os números dela não são os do dashboard até o ticket 09.
+As exportações, em "Exportar" no dashboard, são geradas pela API com os filtros da tela e o nome de arquivo que ela dá: o resumo em Excel e em PDF, para todos os perfis, e todas as respostas em Excel, para quem tem `exportacao:detalhada` (o Visualizador não tem). O telefone para retorno só vai na planilha das respostas de quem tem `contatos:ver` (o Super Admin e a Ouvidoria); quem decide é a API.
 
 O `.env` é opcional. Copie o [`.env.example`](.env.example) para `.env` só se precisar mudar um padrão:
 
@@ -66,12 +66,12 @@ Os tipos das rotas, dos corpos e dos erros vêm do `openapi.json` que a API gera
 | `/s/pronto-atendimento` | Pesquisa do setor (o QR Code leva para cá), com o setor cadastrado na API |
 | `/totem/pronto-atendimento` | A mesma pesquisa no modo totem |
 | `/tv#demo-recepcao-fhdod` | TV Wall da tela de demonstração da API (`pnpm db:demo` de lá); a outra tela de lá, `/tv#demo-corredor-desativada`, está desativada e mostra que a tela não está ativa |
-| `/login` e `/painel` | Painel da gestão: login, sessão, cadastros, indicadores, respostas, pedidos de retorno e telas de TV na API; exportações ainda simuladas |
+| `/login` e `/painel` | Painel da gestão: login, sessão, cadastros, indicadores, respostas, pedidos de retorno, telas de TV e exportações na API |
 | `/s/<setor-inativo>` | Um setor desativado na API, ou um slug que não existe: mostra a mensagem de pesquisa indisponível |
 
-Para testar as telas de erro da exportação, a única área ainda simulada, acrescente ao endereço `?falha=tudo` (toda chamada simulada falha). No resto, as falhas são as de verdade: com a API parada, a pesquisa não abre e oferece "Tentar de novo"; sem internet no meio, as respostas continuam na tela e a mesma chave vai na nova tentativa, sem gravar a avaliação duas vezes. A TV sem rede mantém os últimos números, com "Sem conexão. Números das HH:MM" no rodapé, e volta sozinha na consulta seguinte (a cada 30 s).
+As falhas são as de verdade: com a API parada, a pesquisa não abre e oferece "Tentar de novo"; sem internet no meio, as respostas continuam na tela e a mesma chave vai na nova tentativa, sem gravar a avaliação duas vezes. A TV sem rede mantém os últimos números, com "Sem conexão. Números das HH:MM" no rodapé, e volta sozinha na consulta seguinte (a cada 30 s). Uma exportação que falha, sem rede ou num setor que não é da pessoa, mostra um aviso, e o dashboard continua na tela.
 
-Para voltar aos dados simulados iniciais, apague os dados do site no navegador (o "banco" simulado fica no `localStorage`, na chave `fhdod-mock-banco`).
+Um navegador que abriu a versão simulada ainda guarda o "banco" dela no `localStorage`, na chave `fhdod-mock-banco`, sem uso: apagar os dados do site o tira.
 
 ## Imagem Docker
 
