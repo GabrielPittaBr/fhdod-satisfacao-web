@@ -1,7 +1,5 @@
-// Tipos do contrato da API. A pesquisa pública, a sessão do painel, os cadastros, os indicadores, as respostas,
-// os pedidos de retorno e o erro padrão já vêm do schema.d.ts, gerado do openapi.json por `pnpm api:tipos`. O
-// resto (as telas e os indicadores da TV) ainda é escrito à mão, com os mesmos nomes de campo do Plano de
-// Desenvolvimento, e troca de lugar quando a TV for ligada à API (ticket 08).
+// Tipos do contrato da API: todos vêm do schema.d.ts, gerado do openapi.json por `pnpm api:tipos`. Aqui eles
+// ganham os nomes que as telas usam; nenhum é escrito à mão.
 import type { components, paths } from './schema'
 
 type Contrato = components['schemas']
@@ -17,11 +15,6 @@ export type Permissao = Contrato['Permissao']
 export type BaseData = Contrato['BaseData']
 export type Granularidade = Contrato['Granularidade']
 export type StatusRetorno = Contrato['StatusRetorno']
-
-/** O envelope das respostas de sucesso da API. Só os dados simulados da TV ainda o usam. */
-export interface Envelope<T> {
-  data: T
-}
 
 /** A página de uma lista: `meta.total` conta todas as páginas. */
 export type Meta = Contrato['Meta']
@@ -51,15 +44,6 @@ export type Turno = Contrato['Turno']
 /** Com `temRespostas`, o tipo não pode mais mudar. */
 export type Pergunta = Contrato['Pergunta']
 export type Usuario = Contrato['Usuario']
-
-// ---------- TV Wall: telas ----------
-
-export interface TelaTv {
-  id: number
-  nome: string
-  ativa: boolean
-  ultimoAcessoEm: string | null
-}
 
 // ---------- Autenticação: do contrato gerado ----------
 
@@ -101,14 +85,9 @@ export type ItemResposta = Contrato['ItemResposta']
 export type RespostaDetalhe = Contrato['RespostaDetalhe']
 export type PedidoRetorno = Contrato['PedidoRetorno']
 
-// ---------- TV Wall ----------
+// ---------- TV Wall: do contrato gerado ----------
 
-export interface IndicadoresTv {
-  tela: string
-  geradoEm: string
-  /** Mês corrente, pela data do atendimento. */
-  mes: Pick<Resumo, 'nps' | 'total' | 'promotores' | 'neutros' | 'detratores' | 'mediaEscala'>
-  npsPorSetor: Omit<NpsSetor, 'setorId'>[]
-  evolucao: PontoEvolucao[]
-  destaques: Pick<ItemRanking, 'setor' | 'categoria' | 'media' | 'percentual45'>[]
-}
+/** Uma TV do hospital. O token do link não volta na lista: só aparece ao criar a tela. */
+export type TelaTv = Contrato['TelaTv']
+/** Os números gerais da TV, de todos os setores: só contagens e médias, sem comentário nem dado pessoal. */
+export type IndicadoresTv = Contrato['IndicadoresTv']
