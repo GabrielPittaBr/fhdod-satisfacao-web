@@ -1,5 +1,12 @@
 // Nomes que a pessoa lê na tela para os códigos do contrato.
-import type { Canal, Classificacao, Perfil, TipoComentario, TipoPergunta } from '@/lib/api/tipos'
+import type {
+  Canal,
+  Classificacao,
+  Perfil,
+  StatusRetorno,
+  TipoComentario,
+  TipoPergunta,
+} from '@/lib/api/tipos'
 
 export const ROTULO_PERFIL: Record<Perfil, string> = {
   SUPER_ADMIN: 'Super Admin',
@@ -31,4 +38,12 @@ export const ROTULO_TIPO_PERGUNTA: Record<TipoPergunta, string> = {
   SIM_NAO: 'Sim ou não',
   MULTIPLA_ESCOLHA: 'Múltipla escolha',
   TEXTO: 'Texto livre',
+}
+
+/** No MVP, todo pedido de retorno fica NOVO; os outros chegam com o acompanhamento, na fase 2. */
+export const ROTULO_STATUS_RETORNO: Record<StatusRetorno, string> = {
+  NOVO: 'Novo',
+  PENDENTE: 'Pendente',
+  EM_ATENDIMENTO: 'Em atendimento',
+  RESOLVIDO: 'Resolvido',
 }
