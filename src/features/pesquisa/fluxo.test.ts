@@ -56,7 +56,17 @@ describe('etapas da pesquisa', () => {
       turnoId: 2,
       itens: [{ perguntaId: 11, valorNumero: 5 }],
       nps: 9,
+      site: '',
     })
+  })
+
+  it('manda o campo isca sempre, com o que estiver nele', () => {
+    const e = aplicar(inicio(), ...ateAsPerguntas, { tipo: 'PULAR' }, { tipo: 'PULAR' }, { tipo: 'PULAR' })
+    const pronto = aplicar(e, { tipo: 'SELECIONAR_NPS', nps: 7 })
+    // pessoa: o campo está fora da tela e vai vazio
+    expect(montarEnvio(pronto, 'WEB')).toMatchObject({ site: '' })
+    // robô que preenche todo campo: o valor vai como está, e a API recusa o envio
+    expect(montarEnvio(pronto, 'WEB', 'https://spam.example')).toMatchObject({ site: 'https://spam.example' })
   })
 
   it('aceita pular todas as perguntas e responder só a nota', () => {

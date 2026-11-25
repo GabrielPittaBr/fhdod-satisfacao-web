@@ -127,8 +127,11 @@ export function redutor(e: EstadoFluxo, acao: AcaoFluxo): EstadoFluxo {
   }
 }
 
-/** Corpo do envio. Sem a nota de recomendação não há envio: é a única resposta obrigatória. */
-export function montarEnvio(e: EstadoFluxo, canal: Canal): EnvioResposta | null {
+/**
+ * Corpo do envio. Sem a nota de recomendação não há envio: é a única resposta obrigatória.
+ * `site` é o que estiver no campo isca: vazio para pessoas; preenchido, a API recusa o envio.
+ */
+export function montarEnvio(e: EstadoFluxo, canal: Canal, site = ''): EnvioResposta | null {
   if (e.nps === null || e.dataAtendimento === null || e.turnoId === null) return null
   return {
     chaveIdempotencia: e.chaveIdempotencia,
@@ -137,6 +140,7 @@ export function montarEnvio(e: EstadoFluxo, canal: Canal): EnvioResposta | null 
     turnoId: e.turnoId,
     itens: e.perguntaIds.flatMap((id) => e.respostas[id] ?? []),
     nps: e.nps,
+    site,
   }
 }
 

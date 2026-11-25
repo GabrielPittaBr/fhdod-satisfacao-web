@@ -5,6 +5,7 @@ import type { PesquisaPublica } from '@/lib/api/tipos'
 import { NIVEIS } from '@/lib/escala'
 import type { FluxoPesquisa } from '../hooks/useFluxoPesquisa'
 import { BotaoDiscreto, BotaoPrincipal } from './botoes'
+import { CampoIsca } from './CampoIsca'
 import { EscalaNps } from './EscalaNps'
 import { EtapaComentario } from './EtapaComentario'
 import { EtapaContato } from './EtapaContato'
@@ -26,6 +27,7 @@ export function Etapas({
 }) {
   const { estado } = fluxo
   const conteudo = useRef<HTMLDivElement>(null)
+  const isca = useRef<HTMLInputElement>(null)
   const chaveDaTela = `${estado.etapa}-${estado.indice}`
 
   // A cada tela, o foco vai para o título: o leitor de tela anuncia a nova pergunta
@@ -154,10 +156,11 @@ export function Etapas({
                 aqui.
               </Aviso>
             )}
+            <CampoIsca ref={isca} />
             <BotaoPrincipal
               className="mt-6"
               disabled={estado.nps === null || fluxo.envio.pendente}
-              onClick={fluxo.enviar}
+              onClick={() => fluxo.enviar(isca.current?.value)}
             >
               {fluxo.envio.pendente ? 'Enviando…' : fluxo.envio.erro ? 'Tentar de novo' : 'Enviar avaliação'}
             </BotaoPrincipal>
