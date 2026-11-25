@@ -48,14 +48,14 @@ Os merges antigos do histórico (`feat/painel`, `feat/tv-wall`...) são de antes
 O mesmo da API: [Conventional Commits](https://www.conventionalcommits.org/pt-br/), `tipo(escopo): descrição`.
 
 - **Tipo em inglês:** `feat` (funcionalidade), `fix` (correção), `docs` (documentação), `chore` (configuração e manutenção), `style` (formatação, sem mudar comportamento), `refactor` (reorganização, sem mudar comportamento), `test` (testes) e `ci` (pipeline).
-- **Escopo:** o assunto afetado, com o mesmo nome da pasta em `src/features/` (`auth`, `pesquisa`, `dashboard`, `respostas`, `contatos`, `setores`, `perguntas`, `cadastros`, `usuarios`, `tv-wall`). Mudanças fora das features usam a área (`api` para `src/lib/api/`, `mocks`, `ui`, `totem`, `tickets`, `registros`); mudanças que tocam o projeto inteiro ficam sem escopo.
+- **Escopo:** o assunto afetado, com o mesmo nome da pasta em `src/features/` (`auth`, `pesquisa`, `dashboard`, `respostas`, `contatos`, `setores`, `perguntas`, `cadastros`, `usuarios`, `tv-wall`). Mudanças fora das features usam a área (`api` para `src/lib/api/`, `ui`, `totem`, `tickets`, `registros`); mudanças que tocam o projeto inteiro ficam sem escopo.
 - **Descrição em português**, curta, começando com letra minúscula e sem ponto final. Se o porquê não for óbvio, explique no corpo do commit.
 
 | Exemplo | Quando |
 | --- | --- |
 | `feat(pesquisa): escala de rostinhos` | Funcionalidade nova numa feature |
 | `fix(auth): renovar o token só uma vez` | Correção |
-| `test(mocks): classificação e cálculo do nps` | Testes |
+| `test(api): erro sem corpo vira o erro padrão` | Testes |
 | `docs(tickets): divide a ligação com a API em 10 tickets` | Documentação de uma área |
 | `chore: configuração do Claude Code sem coautoria` | Configuração do projeto inteiro |
 | `ci: lint, tipos, testes e build no GitHub Actions` | Pipeline |
@@ -77,7 +77,7 @@ git -C ../fhdod-satisfacao-api fetch origin
 git -C ../fhdod-satisfacao-api grep -h "Status" origin/develop -- "docs/tickets/03-*.md"
 ```
 
-Ao ligar uma área à API, **só o `api.ts` dela muda**: telas e hooks continuam iguais. Se a API devolve algo diferente do mock, vale a API, e a diferença fica no registro e no PR.
+Ao ligar uma área à API, **só o `api.ts` dela muda**: telas e hooks continuam iguais. Se a API devolve algo diferente do que a tela esperava, vale a API, e a diferença fica no registro e no PR.
 
 ### Status
 
@@ -150,13 +150,13 @@ componente → hook (TanStack Query) → features/<assunto>/api.ts → cliente H
 
 - A **classificação** da resposta (NORMAL, BAIXA, BAIXISSIMA) e o **NPS** chegam prontos da API; o front só os exibe. Nada de decidir nota baixa num componente.
 - Menus e rotas dependem da **lista de permissões** do `/auth/me` (`usePode`, em `src/stores/sessao.ts`), nunca do nome do perfil. Esconder um botão é só conforto: quem garante o acesso é a API.
-- As permissões e os setores de cada perfil vêm só do `/auth/me`. Enquanto houver dados simulados, a classificação e o NPS simulados ficam só em `src/mocks/regras.ts`.
+- As permissões e os setores de cada perfil vêm só do `/auth/me`. A classificação e o NPS são calculados e testados só na API (`classificar-nota.ts` e `calcular-nps.ts`, em `src/shared/rules/` de lá); o front não tem cópia dessas regras, nem para testes.
 
 ### Nada da pesquisa fica salvo no navegador
 
 - O estado da pesquisa vive no `useReducer` do `useFluxoPesquisa` e some ao reiniciar. **Nada da pesquisa vai para `localStorage`, `sessionStorage`, cookie ou URL**, nem a chave de idempotência: no totem, o próximo paciente não pode ver nada do anterior.
 - O token de acesso do painel fica só em memória (Zustand); ao recarregar, a sessão volta pelo refresh, que fica no cookie HttpOnly da API: o front nunca o lê nem o guarda. Ao sair, ou quando a sessão acaba, o cache do TanStack Query é apagado, para quem entrar depois não ver os dados de quem saiu.
-- O front não guarda nada no `localStorage`. O "banco" simulado de `src/mocks/`, que nenhuma tela usa mais, sai com os mocks no ticket 10.
+- O front não guarda nada no `localStorage` nem no `sessionStorage`.
 
 ### As decisões de interface dos registros continuam valendo
 
@@ -213,13 +213,13 @@ Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fic
 - **CI:** o `.github/workflows/ci.yml` instala com o pnpm (com cache) e roda lint, tipos, testes e build em todo pull request e em cada push na `develop` e na `main`. O modelo de PR fica em `.github/pull_request_template.md`.
 - **Formatação:** o commit que passou o Prettier no projeto todo está no `.git-blame-ignore-revs`, que o `git blame` do GitHub pula. Para o da máquina pular também: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 - **Contrato mudou na API:** rode `pnpm api:tipos` e commite o `schema.d.ts` gerado no mesmo PR que usa o contrato novo. O ESLint e o Prettier não mexem nele.
-- **Pesquisa:** usa a API de verdade; para abrir com o `pnpm dev`, a API precisa estar rodando, com um setor cadastrado (README, em "Com a API").
-- **Login:** é o da API, com as contas de lá (README, em "Com a API"). Não há mais atalhos de demonstração.
-- **Cadastros:** setores, categorias, turnos, perguntas e usuários são os da API. Para a pesquisa abrir, cadastre no painel um setor com perguntas (README, em "Com a API").
-- **Indicadores, respostas e pedidos de retorno:** são os da API. Para terem o que mostrar, rode os dados de demonstração da API (`pnpm db:demo`, README, em "Com a API") ou responda a pesquisa de um setor cadastrado.
+- **Pesquisa:** usa a API de verdade; para abrir com o `pnpm dev`, a API precisa estar rodando, com um setor cadastrado (README, em "Como rodar").
+- **Login:** é o da API, com as contas de lá (README, em "Como rodar"). Não há mais atalhos de demonstração.
+- **Cadastros:** setores, categorias, turnos, perguntas e usuários são os da API. Para a pesquisa abrir, cadastre no painel um setor com perguntas (README, em "Sem os dados de demonstração").
+- **Indicadores, respostas e pedidos de retorno:** são os da API. Para terem o que mostrar, rode os dados de demonstração da API (`pnpm db:demo`, README, em "Dados de demonstração") ou responda a pesquisa de um setor cadastrado.
 - **TV:** os números e as telas são os da API. Os dados de demonstração de lá abrem em `/tv#demo-recepcao-fhdod`; outras telas se criam no painel, em "Telas de TV", com o link mostrado uma vez só.
 - **Exportações:** o resumo em Excel e em PDF e as respostas em Excel são gerados pela API, com os filtros da tela; o telefone só vai para quem tem `contatos:ver`, e quem decide é a API.
-- **Dados simulados:** nenhuma tela usa mais `src/mocks/`, e o `?falha=tudo` deixou de ter efeito. A pasta sai inteira no ticket 10.
+- **Sem dados simulados:** tudo o que o front mostra vem da API, e não há simulação de falha pela URL (os antigos `?falha=` saíram). Os dados de demonstração ficam só na API (`pnpm db:demo`, README, em "Dados de demonstração"); as falhas se testam com a API parada ou com o navegador offline. Dado novo para uma tela entra no contrato da API, nunca num mock do front.
 
 ## Onde estão as coisas
 
@@ -231,7 +231,7 @@ Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fic
 | Registros das entregas e decisões de interface | [`docs/registros/`](docs/registros/) |
 | Cliente HTTP, tipos gerados do contrato e erro padrão | [`src/lib/api/`](src/lib/api/) e o gerador, em [`scripts/api-tipos.mjs`](scripts/api-tipos.mjs) |
 | Variáveis do ambiente de desenvolvimento | [`.env.example`](.env.example) |
-| Dados simulados e as regras que serão da API | [`src/mocks/`](src/mocks/) |
+| Dados de demonstração | Na API: `pnpm db:demo`, com o código em `../fhdod-satisfacao-api/prisma/seeds/demonstracao/` |
 | API de mentira dos testes dos `api.ts` | [`src/test/api-falsa.ts`](src/test/api-falsa.ts) |
 | Cores, fonte e temas | [`src/styles/globals.css`](src/styles/globals.css) |
 | CI e modelo de pull request | [`.github/`](.github/) |

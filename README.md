@@ -2,23 +2,51 @@
 
 Front-end do Sistema de Avaliação da Fundação Hospitalar Doutor Oswaldo Diesel: pesquisa de satisfação do paciente (celular, tablet e totem), painel da gestão e TV Wall.
 
-A pesquisa do paciente, o painel, os cadastros e a TV Wall já usam a [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela, a gestão entra no painel com a conta de verdade, os setores, as categorias, os turnos, as perguntas e os usuários são lidos e gravados lá, o dashboard, as respostas e os pedidos de retorno mostram os dados de lá, a TV Wall mostra os números de lá, com as telas criadas e desativadas no painel, e as exportações do dashboard (o resumo em Excel e em PDF e as respostas em Excel) são geradas lá. Uma avaliação enviada na pesquisa aparece no dashboard na atualização seguinte (a cada minuto, ou ao trocar um filtro). Nenhuma tela usa mais os dados simulados de `src/mocks/`, que saem no ticket 10.
+Tudo o que o front mostra vem da [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela, a gestão entra no painel com a conta de verdade, os setores, as categorias, os turnos, as perguntas e os usuários são lidos e gravados lá, o dashboard, as respostas e os pedidos de retorno mostram os dados de lá, a TV Wall mostra os números de lá, com as telas criadas e desativadas no painel, e as exportações do dashboard (o resumo em Excel e em PDF e as respostas em Excel) são geradas lá. Uma avaliação enviada na pesquisa aparece no dashboard na atualização seguinte (a cada minuto, ou ao trocar um filtro). O front não tem dados simulados: para ter o que mostrar, a API precisa estar rodando, de preferência com os dados de demonstração dela.
 
 Antes de trabalhar no repositório, leia o [`AGENTS.md`](AGENTS.md): fluxo de branches, padrão de commits, tickets, definição de pronto e as regras que já valem no front. As regras de negócio estão no [Plano de Desenvolvimento](https://github.com/GabrielPittaBr/fhdod-satisfacao-api/blob/develop/docs/Plano%20de%20Desenvolvimento%20-%20FHDOD.md), no repositório da API.
 
 ## Como rodar
 
-Precisa do Node.js 26 (a versão fica no `.nvmrc`, a mesma da API). O gerenciador é o pnpm (a versão está em `packageManager`); sem ele instalado, use `corepack pnpm` no lugar de `pnpm`.
+Precisa do Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e, para a API, do Docker. O gerenciador é o pnpm (a versão está em `packageManager`); sem ele instalado, use `corepack pnpm` no lugar de `pnpm`.
+
+### 1. Os dois repositórios lado a lado
+
+O front lê o contrato da API na pasta ao lado, então os dois ficam na mesma pasta:
+
+```bash
+git clone https://github.com/GabrielPittaBr/fhdod-satisfacao-api.git
+git clone https://github.com/GabrielPittaBr/fhdod-satisfacao-web.git
+```
+
+### 2. A API, com os dados de demonstração
+
+Na pasta `fhdod-satisfacao-api` (o passo a passo completo está no README de lá):
+
+```bash
+pnpm install
+cp .env.example .env                       # já aponta para o banco do Docker
+docker compose up -d                       # PostgreSQL de desenvolvimento e de teste
+pnpm db:deploy                             # as tabelas
+pnpm db:seed                               # categorias, turnos, configurações e o primeiro Super Admin
+DEMO_CONFIRM=satisfacao pnpm db:demo       # os dados de demonstração (veja abaixo)
+pnpm dev                                   # API em http://localhost:3333
+```
+
+No PowerShell, o `db:demo` é `$env:DEMO_CONFIRM='satisfacao'; pnpm db:demo; Remove-Item Env:DEMO_CONFIRM`. Com a API no ar, `http://localhost:3333/api/health` responde `{"data":{"status":"ok","banco":"ok"}}`.
+
+### 3. O front
+
+Na pasta `fhdod-satisfacao-web`:
 
 ```bash
 pnpm install   # dependências e hooks do Git
+pnpm dev       # front em http://localhost:5173
 ```
 
-```bash
-pnpm dev
-```
+O `pnpm dev` repassa tudo o que começa com `/api` para a API em `http://localhost:3333`, como o Caddy faz em produção. O front chama a API sempre no mesmo endereço do site, então não há CORS no caminho.
 
-Abra `http://localhost:5173/login` e entre com uma conta da API: na primeira vez, o Super Admin que o `pnpm db:seed` de lá cria (o `SEED_ADMIN_EMAIL` e a senha provisória `SEED_ADMIN_PASSWORD` do `.env` da API). No primeiro acesso, o painel pede a troca da senha provisória antes de abrir. A pesquisa, o painel e a TV precisam da API (veja a seção seguinte).
+Abra `http://localhost:5173/login` e entre com uma das contas de demonstração (uma de cada perfil, com as senhas na tabela do README da API) ou com o Super Admin que o `pnpm db:seed` cria (o `SEED_ADMIN_EMAIL` e a senha provisória `SEED_ADMIN_PASSWORD` do `.env` da API). No primeiro acesso, o painel pede a troca da senha provisória antes de abrir. A pesquisa, o totem e a TV abrem nos [endereços](#endereços) abaixo.
 
 | Comando | O que faz |
 | --- | --- |
@@ -33,22 +61,29 @@ Abra `http://localhost:5173/login` e entre com uma conta da API: na primeira vez
 
 Antes de cada commit, os hooks do Git rodam o ESLint e o Prettier nos arquivos alterados e conferem a mensagem do commit. Em todo pull request, o CI do GitHub Actions roda lint, tipos, testes e build.
 
-### Com a API
+### Dados de demonstração
 
-O `pnpm dev` repassa tudo o que começa com `/api` para a API rodando na máquina, em `http://localhost:3333`, como o Caddy faz em produção. O front chama a API sempre no mesmo endereço do site, então não há CORS no caminho. Para subir a API, siga o README dela (`docker compose up -d`, `pnpm db:deploy`, `pnpm db:seed` e `pnpm dev`, na pasta `../fhdod-satisfacao-api`).
+Os dados de demonstração ficam só na API: o front não tem nenhum. O `pnpm db:demo`, na pasta dela e depois do `pnpm db:seed`, grava no banco de lá:
 
-O jeito mais rápido de ter o que mostrar são os dados de demonstração da API: `DEMO_CONFIRM=satisfacao pnpm db:demo`, na pasta dela, depois do `pnpm db:seed`. Eles trazem os setores com perguntas (o `pronto-atendimento` abre os links abaixo), uma conta de cada perfil, com as senhas no README de lá, as duas telas de TV dos endereços abaixo e cerca de quatro meses de avaliações.
+- os 6 setores, com as perguntas de cada um na ordem da jornada (o `pronto-atendimento` abre os links abaixo; a Maternidade está desativada);
+- uma conta de cada perfil, com as senhas na tabela do README da API;
+- as duas telas de TV dos endereços abaixo;
+- cerca de quatro meses de avaliações até hoje, com comentários e pedidos de retorno. Tudo é inventado.
 
-Sem eles, cadastre pelo próprio painel, com o Super Admin, o que a pesquisa e os outros perfis precisam:
+O código fica em [`prisma/seeds/demonstracao/`](https://github.com/GabrielPittaBr/fhdod-satisfacao-api/tree/develop/prisma/seeds/demonstracao), no repositório da API: o `dados.ts` tem os setores, as perguntas, as contas, as telas e os comentários; o `historico.ts` gera as avaliações, com uma semente fixa por dia (no mesmo dia, as mesmas avaliações). Rodar de novo substitui os dados de demonstração, sem duplicar nada, e gera as avaliações até a data de hoje. O comando nunca roda em produção; o README da API explica por quê.
+
+### Sem os dados de demonstração
+
+Cadastre pelo próprio painel, com o Super Admin, o que a pesquisa e os outros perfis precisam:
 
 - para a pesquisa abrir, um setor com perguntas, em "Setores e perguntas". Com o endereço `pronto-atendimento`, os links abaixo abrem a pesquisa;
 - para entrar com os outros perfis, os usuários, em "Usuários": a senha provisória aparece uma vez só, ao criar a conta ou ao redefinir a senha, com o botão de copiar;
 - para o dashboard, as respostas, os pedidos de retorno e a TV terem o que mostrar, avaliações respondidas na pesquisa. O telefone para retorno é oferecido na avaliação baixa;
 - para a TV, uma tela, em "Telas de TV": o link dela, com o token depois do `#`, aparece uma vez só, ao criar a tela.
 
-As exportações, em "Exportar" no dashboard, são geradas pela API com os filtros da tela e o nome de arquivo que ela dá: o resumo em Excel e em PDF, para todos os perfis, e todas as respostas em Excel, para quem tem `exportacao:detalhada` (o Visualizador não tem). O telefone para retorno só vai na planilha das respostas de quem tem `contatos:ver` (o Super Admin e a Ouvidoria); quem decide é a API.
+### O `.env`
 
-O `.env` é opcional. Copie o [`.env.example`](.env.example) para `.env` só se precisar mudar um padrão:
+É opcional: os padrões já funcionam com a API rodando na máquina e os dois repositórios lado a lado. Copie o [`.env.example`](.env.example) para `.env` só se precisar mudar um deles:
 
 | Variável | Padrão | Para quê |
 | --- | --- | --- |
@@ -57,7 +92,17 @@ O `.env` é opcional. Copie o [`.env.example`](.env.example) para `.env` só se 
 
 ### Tipos do contrato
 
-Os tipos das rotas, dos corpos e dos erros vêm do `openapi.json` que a API gera e commita. Quando o contrato mudar na API, rode `pnpm api:tipos` e commite o `src/lib/api/schema.d.ts` gerado, que nunca é editado à mão. O cliente HTTP ([`src/lib/api/cliente.ts`](src/lib/api/cliente.ts)) usa esses tipos: o endereço, os parâmetros e o corpo de cada chamada são conferidos pelo TypeScript.
+Os tipos das rotas, dos corpos, das respostas e dos erros vêm só do `openapi.json` que a API gera e commita na raiz dela. Nenhum tipo da API é escrito à mão no front.
+
+```bash
+pnpm api:tipos
+```
+
+O comando lê o `../fhdod-satisfacao-api/openapi.json`, da pasta ao lado, e grava o [`src/lib/api/schema.d.ts`](src/lib/api/schema.d.ts), que nunca é editado à mão. Para ler o contrato de outro lugar, aponte o `OPENAPI_JSON` (no `.env` ou na linha do comando) para outro caminho ou para a API rodando: `http://localhost:3333/api/docs/openapi.json`.
+
+- **Quando o contrato muda na API**, o PR de lá entra primeiro, com o `openapi.json` atualizado (`pnpm openapi:exportar`, na API). Depois, aqui, rode `pnpm api:tipos` e commite o `schema.d.ts` gerado no mesmo PR que usa o contrato novo.
+- O [`src/lib/api/tipos.ts`](src/lib/api/tipos.ts) só dá às telas os nomes dos tipos gerados (`Setor`, `Pergunta`, `Sessao`...), sem escrever nenhum.
+- O cliente HTTP ([`src/lib/api/cliente.ts`](src/lib/api/cliente.ts)) usa esses tipos: o endereço, os parâmetros e o corpo de cada chamada são conferidos pelo TypeScript, e um contrato que mudou sem o front acompanhar faz o `pnpm typecheck` falhar.
 
 ## Endereços
 
@@ -69,9 +114,11 @@ Os tipos das rotas, dos corpos e dos erros vêm do `openapi.json` que a API gera
 | `/login` e `/painel` | Painel da gestão: login, sessão, cadastros, indicadores, respostas, pedidos de retorno, telas de TV e exportações na API |
 | `/s/<setor-inativo>` | Um setor desativado na API, ou um slug que não existe: mostra a mensagem de pesquisa indisponível |
 
-As falhas são as de verdade: com a API parada, a pesquisa não abre e oferece "Tentar de novo"; sem internet no meio, as respostas continuam na tela e a mesma chave vai na nova tentativa, sem gravar a avaliação duas vezes. A TV sem rede mantém os últimos números, com "Sem conexão. Números das HH:MM" no rodapé, e volta sozinha na consulta seguinte (a cada 30 s). Uma exportação que falha, sem rede ou num setor que não é da pessoa, mostra um aviso, e o dashboard continua na tela.
+As exportações, em "Exportar" no dashboard, são geradas pela API com os filtros da tela e o nome de arquivo que ela dá: o resumo em Excel e em PDF, para todos os perfis, e todas as respostas em Excel, para quem tem `exportacao:detalhada` (o Visualizador não tem). O telefone para retorno só vai na planilha das respostas de quem tem `contatos:ver` (o Super Admin e a Ouvidoria); quem decide é a API.
 
-Um navegador que abriu a versão simulada ainda guarda o "banco" dela no `localStorage`, na chave `fhdod-mock-banco`, sem uso: apagar os dados do site o tira.
+As falhas são as de verdade, sem simulação pela URL: para vê-las, pare a API ou deixe o navegador offline (DevTools > Network > Offline). Com a API parada, a pesquisa não abre e oferece "Tentar de novo"; sem internet no meio, as respostas continuam na tela e a mesma chave vai na nova tentativa, sem gravar a avaliação duas vezes. A TV sem rede mantém os últimos números, com "Sem conexão. Números das HH:MM" no rodapé, e volta sozinha na consulta seguinte (a cada 30 s). Uma exportação que falha, sem rede ou num setor que não é da pessoa, mostra um aviso, e o dashboard continua na tela.
+
+Um navegador que abriu a versão simulada do front, de antes da API, ainda guarda o "banco" dela no `localStorage`, na chave `fhdod-mock-banco`. Nada no front o lê nem o grava mais; apagar os dados do site o tira.
 
 ## Imagem Docker
 
