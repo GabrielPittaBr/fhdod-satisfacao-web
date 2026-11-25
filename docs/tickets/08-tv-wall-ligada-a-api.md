@@ -6,11 +6,11 @@
 
 **Bloqueado por:** 05 — Login e sessão reais no painel; API 16 — TV Wall: telas e indicadores (repositório da API)
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Critérios de aceite:**
 
-- [ ] A tela da TV lê o token depois do `#` e busca os indicadores com o cabeçalho `X-Tv-Token`; token inválido ou tela desativada mostram a mensagem simples de hoje.
-- [ ] A gestão das telas lista, cria (o link com o token aparece uma única vez) e desativa pela API.
-- [ ] Os tipos da TV vêm do contrato gerado.
-- [ ] Testado: a tela ativa mostra os números, a tela desativada para de funcionar e, sem rede, a TV mantém os números com a hora da última atualização.
+- [x] A tela da TV lê o token depois do `#` e busca os indicadores com o cabeçalho `X-Tv-Token`; token inválido ou tela desativada mostram a mensagem simples de hoje.
+- [x] A gestão das telas lista, cria (o link com o token aparece uma única vez) e desativa pela API.
+- [x] Os tipos da TV vêm do contrato gerado.
+- [x] Testado: a tela ativa mostra os números, a tela desativada para de funcionar e, sem rede, a TV mantém os números com a hora da última atualização.
