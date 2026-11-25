@@ -106,7 +106,7 @@ Se um critério não puder ser cumprido como está escrito, não o pule em silê
 Uma tarefa do front só está pronta quando:
 
 - [ ] **a tela funciona no celular e no computador**: testada pelo menos em 360×740 e em 1366×768, sem rolagem horizontal da página, com toque, mouse e teclado. O totem e a TV também são testados nos tamanhos deles (seção 11 do plano do front) quando a tarefa mexe neles;
-- [ ] **os tipos da API vêm do contrato gerado**: `src/lib/api/schema.d.ts`, criado por `pnpm api:tipos` a partir do `openapi.json` da API, nunca escrito nem editado à mão. A pesquisa já usa os tipos gerados; até cada outra área ser ligada à API, valem os tipos escritos à mão de `src/lib/api/tipos.ts`;
+- [ ] **os tipos da API vêm do contrato gerado**: `src/lib/api/schema.d.ts`, criado por `pnpm api:tipos` a partir do `openapi.json` da API, nunca escrito nem editado à mão. A pesquisa, a sessão e os cadastros já usam os tipos gerados; até cada outra área ser ligada à API, valem os tipos escritos à mão de `src/lib/api/tipos.ts`;
 - [ ] **`pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build` passam** na máquina e no CI, incluindo os testes da regra nova;
 - [ ] a entrega está **registrada em `docs/registros/`**;
 - [ ] os critérios de aceite do ticket estão marcados e o status está `done`;
@@ -133,15 +133,17 @@ Quando a entrega mexe em telas, entra também **Como foi verificado**: os fluxos
 
 ```text
 componente → hook (TanStack Query) → features/<assunto>/api.ts → cliente HTTP → API
-                                                                 (painel e TV, por enquanto: src/mocks/)
+                                                  (indicadores, respostas e TV, por enquanto: src/mocks/)
 ```
 
 - **Só o `api.ts` de cada assunto conversa com a API** e, enquanto ela não chega, com `src/mocks/`. Componentes, páginas e hooks nunca chamam `fetch`, o cliente HTTP nem os mocks diretamente.
 - Cada função do `api.ts` corresponde a um endpoint do contrato: `buscarPesquisa(slug)` ↔ `GET /publico/setores/:slug/pesquisa`.
 - O `api.ts` chama a API pelo cliente de `src/lib/api/cliente.ts` (openapi-fetch, tipado pelo `schema.d.ts`), sempre dentro de `pedir(...)`: ele devolve o corpo do sucesso ou lança o `ErroApi`. Os endereços são os do contrato, com o `/api/v1` na frente, e vão ao mesmo domínio do site.
-- As chamadas do painel usam `pedirComToken(...)` (`src/features/auth/api.ts`) no lugar do `pedir`: ele põe o token de acesso no `Authorization` e, num 401, renova a sessão uma única vez e repete a chamada. Se a renovação falha, a sessão acaba e o painel volta para o login. As renovações da aba saem uma de cada vez, porque a API troca o refresh a cada uso.
+- As chamadas do painel usam `pedirComToken(...)` (`src/features/auth/api.ts`) no lugar do `pedir`: ele põe o token de acesso no `Authorization` e, num 401, renova a sessão uma única vez e repete a chamada. Se a renovação falha, a sessão acaba e o painel volta para o login. As renovações da aba saem uma de cada vez, porque a API troca o refresh a cada uso. Os `api.ts` dos cadastros (`setores`, `cadastros`, `perguntas` e `usuarios`) mostram o uso.
+- O corpo que uma rota recebe vem do contrato, com o `CorpoDe<'/api/v1/setores', 'post'>` de `src/lib/api/tipos.ts`, sem tipo escrito à mão.
+- Os testes de cada `api.ts` usam a API de mentira de `src/test/api-falsa.ts`: as rotas previstas, a resposta de cada uma e a conferência do método, do caminho e do corpo enviados.
 - Todas as leituras e envios passam pelo TanStack Query, para os estados de carregamento e erro existirem em toda tela.
-- Erros chegam às telas como `ErroApi` (`src/lib/api/erro.ts`), com status, código, mensagem, detalhes e o `requestId` que a API mandou. Sem rede, o status é 0, com a mensagem de sem conexão. A tela mostra a mensagem da API, que já vem escrita para quem está na tela, e os erros de validação vão para o campo do formulário indicado em `detalhes` (`src/lib/salvar.ts`).
+- Erros chegam às telas como `ErroApi` (`src/lib/api/erro.ts`), com status, código, mensagem, detalhes e o `requestId` que a API mandou. Sem rede, o status é 0, com a mensagem de sem conexão. A tela mostra a mensagem da API, que já vem escrita para quem está na tela, e os erros de validação vão para o campo do formulário indicado em `detalhes` (`src/lib/salvar.ts`); a validação de um campo que não está na tela aparece com a mensagem do campo. Depois de gravar, o `useSalvar` recarrega as listas afetadas também quando a gravação falha, para a tela não ficar com o que não foi gravado.
 
 ### O front nunca recalcula classificação, NPS nem permissão
 
@@ -212,7 +214,8 @@ Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fic
 - **Contrato mudou na API:** rode `pnpm api:tipos` e commite o `schema.d.ts` gerado no mesmo PR que usa o contrato novo. O ESLint e o Prettier não mexem nele.
 - **Pesquisa:** usa a API de verdade; para abrir com o `pnpm dev`, a API precisa estar rodando, com um setor cadastrado (README, em "Com a API").
 - **Login:** é o da API, com as contas de lá (README, em "Com a API"). Não há mais atalhos de demonstração.
-- **Dados simulados:** enquanto as telas do painel e a TV não são ligadas à API, `?falha=tudo` (toda chamada simulada falha) testa as telas de erro deles. Os mocks usam as permissões e os setores da sessão real (`src/mocks/auth.ts`), um ajuste provisório que sai no ticket 10. Para voltar aos dados simulados iniciais, apague o `localStorage` do site.
+- **Cadastros:** setores, categorias, turnos, perguntas e usuários são os da API. Para a pesquisa abrir, cadastre no painel um setor com perguntas (README, em "Com a API").
+- **Dados simulados:** enquanto os indicadores, as respostas, os pedidos de retorno, as exportações e a TV não são ligados à API, `?falha=tudo` (toda chamada simulada falha) testa as telas de erro deles. Os mocks usam as permissões e os setores da sessão real (`src/mocks/auth.ts`), um ajuste provisório que sai no ticket 10. Para voltar aos dados simulados iniciais, apague o `localStorage` do site.
 
 ## Onde estão as coisas
 
@@ -225,6 +228,7 @@ Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fic
 | Cliente HTTP, tipos gerados do contrato e erro padrão | [`src/lib/api/`](src/lib/api/) e o gerador, em [`scripts/api-tipos.mjs`](scripts/api-tipos.mjs) |
 | Variáveis do ambiente de desenvolvimento | [`.env.example`](.env.example) |
 | Dados simulados e as regras que serão da API | [`src/mocks/`](src/mocks/) |
+| API de mentira dos testes dos `api.ts` | [`src/test/api-falsa.ts`](src/test/api-falsa.ts) |
 | Cores, fonte e temas | [`src/styles/globals.css`](src/styles/globals.css) |
 | CI e modelo de pull request | [`.github/`](.github/) |
 | Imagem Docker e Caddy: HTTPS, repasse de `/api` e cache | [`Dockerfile`](Dockerfile), [`Caddyfile`](Caddyfile) e o README, em "Imagem Docker" |

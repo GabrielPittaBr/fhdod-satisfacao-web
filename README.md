@@ -2,7 +2,7 @@
 
 Front-end do Sistema de Avaliação da Fundação Hospitalar Doutor Oswaldo Diesel: pesquisa de satisfação do paciente (celular, tablet e totem), painel da gestão e TV Wall.
 
-A pesquisa do paciente e o acesso ao painel já usam a [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela, e a gestão entra no painel com a conta de verdade. As telas do painel e a TV ainda usam dados simulados no próprio navegador (`src/mocks/`), até cada área ser ligada à API (tickets 06 a 09). Por isso, por enquanto, uma avaliação enviada na pesquisa não aparece no painel nem na TV.
+A pesquisa do paciente, o acesso ao painel e os cadastros já usam a [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela, a gestão entra no painel com a conta de verdade, e os setores, as categorias, os turnos, as perguntas e os usuários do painel são lidos e gravados lá. Os indicadores, as respostas, os pedidos de retorno, as exportações e a TV ainda usam dados simulados no próprio navegador (`src/mocks/`), até cada área ser ligada à API (tickets 07 a 09). Por isso, por enquanto, uma avaliação enviada na pesquisa não aparece no painel nem na TV.
 
 Antes de trabalhar no repositório, leia o [`AGENTS.md`](AGENTS.md): fluxo de branches, padrão de commits, tickets, definição de pronto e as regras que já valem no front. As regras de negócio estão no [Plano de Desenvolvimento](https://github.com/GabrielPittaBr/fhdod-satisfacao-api/blob/develop/docs/Plano%20de%20Desenvolvimento%20-%20FHDOD.md), no repositório da API.
 
@@ -37,12 +37,12 @@ Antes de cada commit, os hooks do Git rodam o ESLint e o Prettier nos arquivos a
 
 O `pnpm dev` repassa tudo o que começa com `/api` para a API rodando na máquina, em `http://localhost:3333`, como o Caddy faz em produção. O front chama a API sempre no mesmo endereço do site, então não há CORS no caminho. Para subir a API, siga o README dela (`docker compose up -d`, `pnpm db:deploy`, `pnpm db:seed` e `pnpm dev`, na pasta `../fhdod-satisfacao-api`).
 
-A API ainda não tem dados de demonstração (ticket 12 de lá), e as telas de cadastro do painel daqui ainda são simuladas: o que for de verdade se cadastra pelo Swagger da API, em `http://localhost:3333/api/docs`, entrando com o Super Admin (`POST /auth/login`, já com a senha trocada no primeiro acesso ao painel):
+A API ainda não tem dados de demonstração (ticket 12 de lá). Depois de entrar com o Super Admin, cadastre pelo próprio painel o que a pesquisa e os outros perfis precisam:
 
-- para a pesquisa abrir, um setor com perguntas (`POST /setores` e `POST /setores/{setorId}/perguntas`). Com o slug `pronto-atendimento`, os endereços abaixo abrem a pesquisa;
-- para entrar com os outros perfis, os usuários (`POST /usuarios`, que devolve a senha provisória uma vez só, e `PUT /usuarios/{id}/setores` para o gestor e o visualizador).
+- para a pesquisa abrir, um setor com perguntas, em "Setores e perguntas". Com o endereço `pronto-atendimento`, os links abaixo abrem a pesquisa;
+- para entrar com os outros perfis, os usuários, em "Usuários": a senha provisória aparece uma vez só, ao criar a conta ou ao redefinir a senha, com o botão de copiar.
 
-As telas simuladas do painel usam as permissões e os setores da sessão de verdade. Um gestor enxerga, nelas, os setores simulados com os mesmos ids dos setores dele na API.
+As telas ainda simuladas (indicadores, respostas, pedidos de retorno e exportações) usam as permissões e os setores da sessão de verdade, com os dados simulados de `src/mocks/`. Os números delas só batem com os setores da API quando os ids coincidem: cadastrados nesta ordem, Pronto Atendimento, Internação, Raio-X, Laboratório, Ambulatório e Maternidade ficam com os ids dos simulados.
 
 O `.env` é opcional. Copie o [`.env.example`](.env.example) para `.env` só se precisar mudar um padrão:
 
@@ -62,10 +62,10 @@ Os tipos das rotas, dos corpos e dos erros vêm do `openapi.json` que a API gera
 | `/s/pronto-atendimento` | Pesquisa do setor (o QR Code leva para cá), com o setor cadastrado na API |
 | `/totem/pronto-atendimento` | A mesma pesquisa no modo totem |
 | `/tv#demo-recepcao-fhdod` | TV Wall da tela de demonstração (simulada) |
-| `/login` e `/painel` | Painel da gestão: login e sessão na API, telas ainda simuladas |
+| `/login` e `/painel` | Painel da gestão: login, sessão e cadastros na API; indicadores, respostas, pedidos de retorno e telas de TV ainda simulados |
 | `/s/<setor-inativo>` | Um setor desativado na API, ou um slug que não existe: mostra a mensagem de pesquisa indisponível |
 
-Para testar as telas de erro do painel e da TV, acrescente ao endereço `?falha=tudo` (toda chamada simulada falha). Na pesquisa, as falhas são as de verdade: com a API parada, a pesquisa não abre e oferece "Tentar de novo"; sem internet no meio, as respostas continuam na tela e a mesma chave vai na nova tentativa, sem gravar a avaliação duas vezes.
+Para testar as telas de erro das áreas simuladas do painel e da TV, acrescente ao endereço `?falha=tudo` (toda chamada simulada falha). Na pesquisa e nos cadastros, as falhas são as de verdade: com a API parada, a pesquisa não abre e oferece "Tentar de novo"; sem internet no meio, as respostas continuam na tela e a mesma chave vai na nova tentativa, sem gravar a avaliação duas vezes.
 
 Para voltar aos dados simulados iniciais, apague os dados do site no navegador (o "banco" simulado fica no `localStorage`, na chave `fhdod-mock-banco`).
 
