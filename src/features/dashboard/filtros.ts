@@ -1,6 +1,6 @@
 // Os filtros do dashboard moram na URL: a mesma visão pode ser compartilhada
 // e a exportação sai exatamente com o que está na tela.
-import { startOfMonth, subDays } from 'date-fns'
+import { isValid, parseISO, startOfMonth, subDays } from 'date-fns'
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import type { Canal, FiltrosDashboard } from '@/lib/api/tipos'
@@ -17,7 +17,14 @@ export const PERIODOS = {
 export type Periodo = keyof typeof PERIODOS
 
 const DIAS: Partial<Record<Periodo, number>> = { hoje: 0, '7d': 6, '30d': 29, '90d': 89 }
-const ehData = (valor: string | null): valor is string => !!valor && /^\d{4}-\d{2}-\d{2}$/.test(valor)
+// A API recusa (400) data que não existe e ID que não é um inteiro positivo. Um endereço digitado ou
+// cortado à mão cai no padrão, em vez de deixar o painel inteiro com erro.
+const ehData = (valor: string | null): valor is string =>
+  !!valor && /^\d{4}-\d{2}-\d{2}$/.test(valor) && isValid(parseISO(valor))
+const lerId = (valor: string | null) => {
+  const id = Number(valor)
+  return Number.isSafeInteger(id) && id > 0 ? id : undefined
+}
 
 export function lerFiltros(params: URLSearchParams): { periodo: Periodo; filtros: FiltrosDashboard } {
   const hoje = new Date()
@@ -38,8 +45,8 @@ export function lerFiltros(params: URLSearchParams): { periodo: Periodo; filtros
       inicio,
       fim,
       base: params.get('base') === 'envio' ? 'ENVIO' : 'ATENDIMENTO',
-      setorId: Number(params.get('setor')) || undefined,
-      turnoId: Number(params.get('turno')) || undefined,
+      setorId: lerId(params.get('setor')),
+      turnoId: lerId(params.get('turno')),
       canal: canal === 'WEB' || canal === 'TOTEM' ? (canal as Canal) : undefined,
     },
   }
