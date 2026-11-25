@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "format": "prettier --write .",
+    "api:tipos": "node --env-file-if-exists=.env scripts/api-tipos.mjs",
     "prepare": "husky"
   },
   "repository": {
@@ -38,6 +39,7 @@
     "cn": "^0.5.2",
     "date-fns": "^4.4.0",
     "lucide-react": "^1.70.0",
+    "openapi-fetch": "^0.17.0",
     "qrcode.react": "^4.2.0",
     "radix-ui": "^1.8.1",
     "react": "^19.3.1",
@@ -68,6 +70,7 @@
     "globals": "^17.14.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.1",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.10",
     "tailwindcss": "^4.3.5",
     "typescript": "~6.0.3",
