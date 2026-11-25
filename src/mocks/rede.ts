@@ -1,12 +1,12 @@
 import { ErroApi } from '@/lib/api/erro'
 import type { DetalheErro } from '@/lib/api/tipos'
 
-// Jeito simples de testar as telas de erro, pela URL:
-//   ?falha=tudo   toda chamada falha com erro 500
-//   ?falha=envio  o primeiro envio da pesquisa é gravado, mas a resposta "se perde" no caminho
+// Jeito simples de testar as telas de erro do painel e da TV, pela URL:
+//   ?falha=tudo   toda chamada simulada falha com erro 500
 // Além disso, com o navegador offline (DevTools > Network > Offline) toda chamada falha.
+// A pesquisa do paciente já chama a API de verdade (ticket 04) e não passa por aqui.
 const parametro = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('falha')
-export const falha = { tudo: parametro === 'tudo', envio: parametro === 'envio' }
+const falha = { tudo: parametro === 'tudo' }
 
 /** Simula a ida ao servidor: latência de 200 a 600 ms e as falhas forçadas. */
 export async function rede() {

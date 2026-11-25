@@ -1,6 +1,13 @@
 // Estado da pesquisa: uma sequência simples de etapas. Fica só na memória (useReducer),
 // nunca em localStorage, sessionStorage ou URL: o próximo paciente não vê nada do anterior.
-import type { Canal, Complemento, EnvioResposta, ItemEnvio, RespostaCriada, Turno } from '@/lib/api/tipos'
+import type {
+  Canal,
+  Complemento,
+  EnvioResposta,
+  ItemEnvio,
+  PesquisaPublica,
+  RespostaCriada,
+} from '@/lib/api/tipos'
 
 export type Etapa =
   'abertura' | 'data' | 'turno' | 'pergunta' | 'nps' | 'comentario' | 'contato' | 'agradecimento'
@@ -120,8 +127,11 @@ export function redutor(e: EstadoFluxo, acao: AcaoFluxo): EstadoFluxo {
   }
 }
 
-/** Corpo do envio. Sem a nota de recomendação não há envio: é a única resposta obrigatória. */
-export function montarEnvio(e: EstadoFluxo, canal: Canal): EnvioResposta | null {
+/**
+ * Corpo do envio. Sem a nota de recomendação não há envio: é a única resposta obrigatória.
+ * `site` é o que estiver no campo isca: vazio para pessoas; preenchido, a API recusa o envio.
+ */
+export function montarEnvio(e: EstadoFluxo, canal: Canal, site = ''): EnvioResposta | null {
   if (e.nps === null || e.dataAtendimento === null || e.turnoId === null) return null
   return {
     chaveIdempotencia: e.chaveIdempotencia,
@@ -130,6 +140,7 @@ export function montarEnvio(e: EstadoFluxo, canal: Canal): EnvioResposta | null 
     turnoId: e.turnoId,
     itens: e.perguntaIds.flatMap((id) => e.respostas[id] ?? []),
     nps: e.nps,
+    site,
   }
 }
 
@@ -144,7 +155,10 @@ export function progresso(e: EstadoFluxo): number {
 }
 
 /** Totem: o turno em andamento agora, inclusive o que atravessa a meia-noite. */
-export function turnoDoHorario(turnos: Pick<Turno, 'id' | 'horaInicio' | 'horaFim'>[], agora: Date): number {
+export function turnoDoHorario(
+  turnos: Pick<PesquisaPublica['turnos'][number], 'id' | 'horaInicio' | 'horaFim'>[],
+  agora: Date,
+): number {
   const emMinutos = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5))
   const minuto = agora.getHours() * 60 + agora.getMinutes()
   const atual = turnos.find((t) => {

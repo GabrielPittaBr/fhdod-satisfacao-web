@@ -87,9 +87,12 @@ export function useFluxoPesquisa(pesquisa: PesquisaPublica, canal: Canal) {
     voltar: () => despachar({ tipo: 'VOLTAR' }),
     selecionarNps: (nps: number) => despachar({ tipo: 'SELECIONAR_NPS', nps }),
 
-    /** Grava a avaliação. Se falhar, nada do que foi respondido se perde e a chave é a mesma na nova tentativa. */
-    enviar() {
-      const corpo = montarEnvio(estado, canal)
+    /**
+     * Grava a avaliação. Se falhar, nada do que foi respondido se perde e a chave é a mesma na nova tentativa.
+     * `site`: o valor do campo isca, vazio para pessoas.
+     */
+    enviar(site = '') {
+      const corpo = montarEnvio(estado, canal, site)
       if (!corpo || enviando.current) return
       enviando.current = true
       envio.mutate(corpo)

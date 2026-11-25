@@ -1,11 +1,17 @@
-// Tipos do contrato da API, escritos à mão com os mesmos nomes de campo do
-// Plano de Desenvolvimento. Serão trocados pelo schema.d.ts gerado do openapi.json.
+// Tipos do contrato da API. A pesquisa pública e o erro padrão já vêm do schema.d.ts, gerado do openapi.json
+// por `pnpm api:tipos`. O resto ainda é escrito à mão, com os mesmos nomes de campo do Plano de
+// Desenvolvimento, e troca de lugar quando a sua área for ligada à API (tickets 05 a 09).
+import type { components } from './schema'
+
+type Contrato = components['schemas']
+
+// Listas de valores que a pesquisa usa: as mesmas do contrato, que o painel também lê.
+export type Canal = Contrato['Canal']
+export type Classificacao = Contrato['Classificacao']
+export type TipoPergunta = Contrato['TipoPergunta']
+export type TipoComentario = Contrato['TipoComentario']
 
 export type Perfil = 'SUPER_ADMIN' | 'GESTOR' | 'OUVIDORIA' | 'VISUALIZADOR'
-export type Canal = 'WEB' | 'TOTEM'
-export type Classificacao = 'NORMAL' | 'BAIXA' | 'BAIXISSIMA'
-export type TipoPergunta = 'ESCALA_1_5' | 'SIM_NAO' | 'MULTIPLA_ESCOLHA' | 'TEXTO'
-export type TipoComentario = 'ELOGIO' | 'RECLAMACAO' | 'SUGESTAO' | 'OUTRO'
 export type BaseData = 'ATENDIMENTO' | 'ENVIO'
 export type Granularidade = 'DIA' | 'SEMANA' | 'MES'
 
@@ -42,10 +48,7 @@ export interface Lista<T> {
   meta: Meta
 }
 
-export interface DetalheErro {
-  campo: string
-  mensagem: string
-}
+export type DetalheErro = Contrato['DetalheErro']
 
 // ---------- Cadastros ----------
 
@@ -122,51 +125,15 @@ export interface AcessoDemo {
   senha: string
 }
 
-// ---------- Pesquisa pública ----------
+// ---------- Pesquisa pública: do contrato gerado ----------
 
-export interface PerguntaPublica {
-  id: number
-  texto: string
-  tipo: TipoPergunta
-  opcoes: string[] | null
-}
-
-export interface PesquisaPublica {
-  setor: { nome: string; slug: string }
-  perguntas: PerguntaPublica[]
-  turnos: Pick<Turno, 'id' | 'nome' | 'horaInicio' | 'horaFim'>[]
-  npsTexto: string
-  textoLimiteCaracteres: number
-  totem: { reinicioSegundos: number; inatividadeSegundos: number }
-}
-
-export interface ItemEnvio {
-  perguntaId: number
-  valorNumero?: number
-  valorTexto?: string
-}
-
-export interface EnvioResposta {
-  chaveIdempotencia: string
-  canal: Canal
-  /** "AAAA-MM-DD": dia do atendimento, não do envio */
-  dataAtendimento: string
-  turnoId: number
-  itens: ItemEnvio[]
-  nps: number
-}
-
-export interface RespostaCriada {
-  id: number
-  classificacao: Classificacao
-  tokenComplemento: string
-  expiraEm: string
-}
-
-export interface Complemento {
-  comentario?: { tipo: TipoComentario; texto: string }
-  contato?: { telefone: string; consentimento: true }
-}
+export type PerguntaPublica = Contrato['PerguntaPublica']
+export type PesquisaPublica = Contrato['PesquisaPublica']
+export type ItemEnvio = Contrato['ItemEnvio']
+/** `site` é o campo isca: invisível para pessoas e sempre vazio quando quem envia é uma delas. */
+export type EnvioResposta = Contrato['EnvioResposta']
+export type RespostaCriada = Contrato['RespostaCriada']
+export type Complemento = Contrato['Complemento']
 
 // ---------- Painel ----------
 

@@ -1,3 +1,5 @@
 # Documentação escrita à mão: o Prettier realinharia as tabelas a cada edição.
 *.md
 pnpm-lock.yaml
+# Gerado do openapi.json por `pnpm api:tipos`: fica como o gerador o escreve.
+src/lib/api/schema.d.ts

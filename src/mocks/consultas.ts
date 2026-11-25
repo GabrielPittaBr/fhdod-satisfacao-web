@@ -31,9 +31,18 @@ import type {
 } from '@/lib/api/tipos'
 import { autenticar, exigir, exigirSetor, type Contexto } from './auth'
 import { banco, salvar, todasAsRespostas, type RespostaBanco } from './banco'
-import { limites } from './pesquisa'
-import { calcularNps, classificarNota, mascararTelefone } from './regras'
+import { calcularNps, classificarNota, mascararTelefone, type Limites } from './regras'
 import { erros, rede } from './rede'
+
+function limites(): Limites {
+  const c = banco.configuracoes
+  return {
+    npsBaixa: c.nps_limite_baixa,
+    npsBaixissima: c.nps_limite_baixissima,
+    escalaBaixa: c.escala_limite_baixa,
+    escalaBaixissima: c.escala_limite_baixissima,
+  }
+}
 
 const iso = (data: Date) => format(data, 'yyyy-MM-dd')
 const nomeDoSetor = (id: number) => banco.setores.find((s) => s.id === id)?.nome ?? 'Setor removido'
