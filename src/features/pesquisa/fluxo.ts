@@ -1,6 +1,13 @@
 // Estado da pesquisa: uma sequência simples de etapas. Fica só na memória (useReducer),
 // nunca em localStorage, sessionStorage ou URL: o próximo paciente não vê nada do anterior.
-import type { Canal, Complemento, EnvioResposta, ItemEnvio, RespostaCriada, Turno } from '@/lib/api/tipos'
+import type {
+  Canal,
+  Complemento,
+  EnvioResposta,
+  ItemEnvio,
+  PesquisaPublica,
+  RespostaCriada,
+} from '@/lib/api/tipos'
 
 export type Etapa =
   'abertura' | 'data' | 'turno' | 'pergunta' | 'nps' | 'comentario' | 'contato' | 'agradecimento'
@@ -144,7 +151,10 @@ export function progresso(e: EstadoFluxo): number {
 }
 
 /** Totem: o turno em andamento agora, inclusive o que atravessa a meia-noite. */
-export function turnoDoHorario(turnos: Pick<Turno, 'id' | 'horaInicio' | 'horaFim'>[], agora: Date): number {
+export function turnoDoHorario(
+  turnos: Pick<PesquisaPublica['turnos'][number], 'id' | 'horaInicio' | 'horaFim'>[],
+  agora: Date,
+): number {
   const emMinutos = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5))
   const minuto = agora.getHours() * 60 + agora.getMinutes()
   const atual = turnos.find((t) => {

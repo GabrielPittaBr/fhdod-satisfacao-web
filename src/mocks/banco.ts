@@ -1,6 +1,7 @@
-// "Banco" do mock. Faz o papel do servidor: os cadastros e as respostas novas ficam
-// no localStorage para a pesquisa enviada aparecer no dashboard e na TV.
+// "Banco" do mock. Faz o papel do servidor para o painel e a TV: os cadastros ficam no localStorage.
 // Limitação conhecida: só vale dentro do mesmo navegador.
+// A pesquisa do paciente já grava na API (ticket 04): as `respostasNovas` são só as que a pesquisa simulada
+// gravou neste navegador antes disso, e saem com os mocks no ticket 10.
 import type {
   Canal,
   Categoria,
@@ -36,8 +37,6 @@ export interface RespostaBanco {
   }[]
   comentario: { tipo: TipoComentario; texto: string } | null
   contato: { id: number; telefone: string; consentimentoEm: string } | null
-  chaveIdempotencia?: string
-  complemento?: { token: string; expiraEm: string; usado: boolean }
 }
 
 export interface UsuarioBanco {
