@@ -139,6 +139,7 @@ componente → hook (TanStack Query) → features/<assunto>/api.ts → cliente H
 - **Só o `api.ts` de cada assunto conversa com a API** e, enquanto ela não chega, com `src/mocks/`. Componentes, páginas e hooks nunca chamam `fetch`, o cliente HTTP nem os mocks diretamente.
 - Cada função do `api.ts` corresponde a um endpoint do contrato: `buscarPesquisa(slug)` ↔ `GET /publico/setores/:slug/pesquisa`.
 - O `api.ts` chama a API pelo cliente de `src/lib/api/cliente.ts` (openapi-fetch, tipado pelo `schema.d.ts`), sempre dentro de `pedir(...)`: ele devolve o corpo do sucesso ou lança o `ErroApi`. Os endereços são os do contrato, com o `/api/v1` na frente, e vão ao mesmo domínio do site.
+- As chamadas do painel usam `pedirComToken(...)` (`src/features/auth/api.ts`) no lugar do `pedir`: ele põe o token de acesso no `Authorization` e, num 401, renova a sessão uma única vez e repete a chamada. Se a renovação falha, a sessão acaba e o painel volta para o login. As renovações da aba saem uma de cada vez, porque a API troca o refresh a cada uso.
 - Todas as leituras e envios passam pelo TanStack Query, para os estados de carregamento e erro existirem em toda tela.
 - Erros chegam às telas como `ErroApi` (`src/lib/api/erro.ts`), com status, código, mensagem, detalhes e o `requestId` que a API mandou. Sem rede, o status é 0, com a mensagem de sem conexão. A tela mostra a mensagem da API, que já vem escrita para quem está na tela, e os erros de validação vão para o campo do formulário indicado em `detalhes` (`src/lib/salvar.ts`).
 
@@ -146,13 +147,13 @@ componente → hook (TanStack Query) → features/<assunto>/api.ts → cliente H
 
 - A **classificação** da resposta (NORMAL, BAIXA, BAIXISSIMA) e o **NPS** chegam prontos da API; o front só os exibe. Nada de decidir nota baixa num componente.
 - Menus e rotas dependem da **lista de permissões** do `/auth/me` (`usePode`, em `src/stores/sessao.ts`), nunca do nome do perfil. Esconder um botão é só conforto: quem garante o acesso é a API.
-- Enquanto houver dados simulados, essas regras ficam só em `src/mocks/regras.ts`.
+- As permissões e os setores de cada perfil vêm só do `/auth/me`. Enquanto houver dados simulados, a classificação e o NPS simulados ficam só em `src/mocks/regras.ts`.
 
 ### Nada da pesquisa fica salvo no navegador
 
 - O estado da pesquisa vive no `useReducer` do `useFluxoPesquisa` e some ao reiniciar. **Nada da pesquisa vai para `localStorage`, `sessionStorage`, cookie ou URL**, nem a chave de idempotência: no totem, o próximo paciente não pode ver nada do anterior.
-- O token de acesso do painel fica só em memória (Zustand); ao recarregar, a sessão volta pelo refresh.
-- Hoje o `localStorage` guarda só o "banco" e o cookie de refresh simulados, dentro de `src/mocks/`. Eles saem com os mocks, no ticket 10.
+- O token de acesso do painel fica só em memória (Zustand); ao recarregar, a sessão volta pelo refresh, que fica no cookie HttpOnly da API: o front nunca o lê nem o guarda. Ao sair, ou quando a sessão acaba, o cache do TanStack Query é apagado, para quem entrar depois não ver os dados de quem saiu.
+- Hoje o `localStorage` guarda só o "banco" simulado, dentro de `src/mocks/`. Ele sai com os mocks, no ticket 10.
 
 ### As decisões de interface dos registros continuam valendo
 
@@ -210,7 +211,8 @@ Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fic
 - **Formatação:** o commit que passou o Prettier no projeto todo está no `.git-blame-ignore-revs`, que o `git blame` do GitHub pula. Para o da máquina pular também: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 - **Contrato mudou na API:** rode `pnpm api:tipos` e commite o `schema.d.ts` gerado no mesmo PR que usa o contrato novo. O ESLint e o Prettier não mexem nele.
 - **Pesquisa:** usa a API de verdade; para abrir com o `pnpm dev`, a API precisa estar rodando, com um setor cadastrado (README, em "Com a API").
-- **Dados simulados:** enquanto o painel e a TV não são ligados à API, `?falha=tudo` (toda chamada simulada falha) testa as telas de erro deles. A tela de login tem atalhos para entrar como cada perfil, e o Super Admin volta aos dados iniciais pelo menu do usuário, em "Restaurar dados de demonstração".
+- **Login:** é o da API, com as contas de lá (README, em "Com a API"). Não há mais atalhos de demonstração.
+- **Dados simulados:** enquanto as telas do painel e a TV não são ligadas à API, `?falha=tudo` (toda chamada simulada falha) testa as telas de erro deles. Os mocks usam as permissões e os setores da sessão real (`src/mocks/auth.ts`), um ajuste provisório que sai no ticket 10. Para voltar aos dados simulados iniciais, apague o `localStorage` do site.
 
 ## Onde estão as coisas
 

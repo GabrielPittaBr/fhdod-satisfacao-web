@@ -365,7 +365,7 @@ export async function revelarTelefone(token: string, id: number): Promise<Envelo
   if (!resposta?.contato) throw erros.naoEncontrado('Pedido de retorno não encontrado.')
   banco.auditoria.push({
     em: new Date().toISOString(),
-    usuarioId: contexto.usuario.id,
+    usuarioId: contexto.usuarioId,
     acao: 'contato.revelar_telefone',
     entidadeId: id,
   })
@@ -438,7 +438,7 @@ export async function exportarRespostas(
   if (comTelefone) {
     banco.auditoria.push({
       em: new Date().toISOString(),
-      usuarioId: contexto.usuario.id,
+      usuarioId: contexto.usuarioId,
       acao: 'exportacao.respostas_com_telefone',
       entidadeId: 0,
     })

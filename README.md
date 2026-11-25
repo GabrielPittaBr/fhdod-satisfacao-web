@@ -2,7 +2,7 @@
 
 Front-end do Sistema de Avaliação da Fundação Hospitalar Doutor Oswaldo Diesel: pesquisa de satisfação do paciente (celular, tablet e totem), painel da gestão e TV Wall.
 
-A pesquisa do paciente já usa a [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela. O painel e a TV ainda usam dados simulados no próprio navegador (`src/mocks/`), até cada área ser ligada à API (tickets 05 a 09). Por isso, por enquanto, uma avaliação enviada na pesquisa não aparece no painel nem na TV.
+A pesquisa do paciente e o acesso ao painel já usam a [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela, e a gestão entra no painel com a conta de verdade. As telas do painel e a TV ainda usam dados simulados no próprio navegador (`src/mocks/`), até cada área ser ligada à API (tickets 06 a 09). Por isso, por enquanto, uma avaliação enviada na pesquisa não aparece no painel nem na TV.
 
 Antes de trabalhar no repositório, leia o [`AGENTS.md`](AGENTS.md): fluxo de branches, padrão de commits, tickets, definição de pronto e as regras que já valem no front. As regras de negócio estão no [Plano de Desenvolvimento](https://github.com/GabrielPittaBr/fhdod-satisfacao-api/blob/develop/docs/Plano%20de%20Desenvolvimento%20-%20FHDOD.md), no repositório da API.
 
@@ -18,7 +18,7 @@ pnpm install   # dependências e hooks do Git
 pnpm dev
 ```
 
-Abra `http://localhost:5173/login`. A tela de login tem atalhos para entrar como cada perfil e links para a pesquisa, o totem e a TV. O painel e a TV funcionam sem a API; a pesquisa precisa dela (veja a seção seguinte).
+Abra `http://localhost:5173/login` e entre com uma conta da API: na primeira vez, o Super Admin que o `pnpm db:seed` de lá cria (o `SEED_ADMIN_EMAIL` e a senha provisória `SEED_ADMIN_PASSWORD` do `.env` da API). No primeiro acesso, o painel pede a troca da senha provisória antes de abrir. A pesquisa e o painel precisam da API (veja a seção seguinte); a TV, ainda simulada, funciona sem ela.
 
 | Comando | O que faz |
 | --- | --- |
@@ -37,7 +37,12 @@ Antes de cada commit, os hooks do Git rodam o ESLint e o Prettier nos arquivos a
 
 O `pnpm dev` repassa tudo o que começa com `/api` para a API rodando na máquina, em `http://localhost:3333`, como o Caddy faz em produção. O front chama a API sempre no mesmo endereço do site, então não há CORS no caminho. Para subir a API, siga o README dela (`docker compose up -d`, `pnpm db:deploy`, `pnpm db:seed` e `pnpm dev`, na pasta `../fhdod-satisfacao-api`).
 
-A API ainda não tem dados de demonstração (ticket 12 de lá), e o painel daqui ainda é simulado: para a pesquisa abrir, cadastre um setor com perguntas pelo Swagger da API, em `http://localhost:3333/api/docs`, entrando com o Super Admin do seed (`POST /auth/login`, a troca da senha provisória em `PATCH /auth/senha`, depois `POST /setores` e `POST /setores/{setorId}/perguntas`). Com o slug `pronto-atendimento`, os endereços abaixo abrem a pesquisa.
+A API ainda não tem dados de demonstração (ticket 12 de lá), e as telas de cadastro do painel daqui ainda são simuladas: o que for de verdade se cadastra pelo Swagger da API, em `http://localhost:3333/api/docs`, entrando com o Super Admin (`POST /auth/login`, já com a senha trocada no primeiro acesso ao painel):
+
+- para a pesquisa abrir, um setor com perguntas (`POST /setores` e `POST /setores/{setorId}/perguntas`). Com o slug `pronto-atendimento`, os endereços abaixo abrem a pesquisa;
+- para entrar com os outros perfis, os usuários (`POST /usuarios`, que devolve a senha provisória uma vez só, e `PUT /usuarios/{id}/setores` para o gestor e o visualizador).
+
+As telas simuladas do painel usam as permissões e os setores da sessão de verdade. Um gestor enxerga, nelas, os setores simulados com os mesmos ids dos setores dele na API.
 
 O `.env` é opcional. Copie o [`.env.example`](.env.example) para `.env` só se precisar mudar um padrão:
 
@@ -57,12 +62,12 @@ Os tipos das rotas, dos corpos e dos erros vêm do `openapi.json` que a API gera
 | `/s/pronto-atendimento` | Pesquisa do setor (o QR Code leva para cá), com o setor cadastrado na API |
 | `/totem/pronto-atendimento` | A mesma pesquisa no modo totem |
 | `/tv#demo-recepcao-fhdod` | TV Wall da tela de demonstração (simulada) |
-| `/login` e `/painel` | Painel da gestão (simulado) |
+| `/login` e `/painel` | Painel da gestão: login e sessão na API, telas ainda simuladas |
 | `/s/<setor-inativo>` | Um setor desativado na API, ou um slug que não existe: mostra a mensagem de pesquisa indisponível |
 
 Para testar as telas de erro do painel e da TV, acrescente ao endereço `?falha=tudo` (toda chamada simulada falha). Na pesquisa, as falhas são as de verdade: com a API parada, a pesquisa não abre e oferece "Tentar de novo"; sem internet no meio, as respostas continuam na tela e a mesma chave vai na nova tentativa, sem gravar a avaliação duas vezes.
 
-O Super Admin pode voltar aos dados iniciais pelo menu do usuário, em "Restaurar dados de demonstração".
+Para voltar aos dados simulados iniciais, apague os dados do site no navegador (o "banco" simulado fica no `localStorage`, na chave `fhdod-mock-banco`).
 
 ## Imagem Docker
 
@@ -80,7 +85,7 @@ O build acontece dentro do Docker, com o Node 26 e o pnpm do `packageManager`: n
 docker run --rm -p 8080:80 fhdod-satisfacao-web
 ```
 
-Abra `http://localhost:8080/s/pronto-atendimento`. Sem `DOMAIN`, o Caddy serve em HTTP na porta 80 do container e avisa no log que não há HTTPS, o que é o esperado na máquina. O painel e a TV, ainda simulados, funcionam sozinhos; a pesquisa e o `/api` precisam da API no ar.
+Abra `http://localhost:8080/s/pronto-atendimento`. Sem `DOMAIN`, o Caddy serve em HTTP na porta 80 do container e avisa no log que não há HTTPS, o que é o esperado na máquina. A TV, ainda simulada, funciona sozinha; a pesquisa, o login do painel e o `/api` precisam da API no ar.
 
 Com a API rodando na máquina (`docker compose up -d` e `pnpm dev`, na pasta da API):
 
@@ -143,7 +148,7 @@ O que é texto (HTML, JS, CSS, JSON e SVG) sai comprimido com zstd ou gzip, conf
 
 ### Hospedagem estática
 
-O build também é um site estático comum, que pode ir para uma hospedagem estática numa demonstração: `vercel.json` (Vercel) e `public/_redirects` (Netlify e Cloudflare Pages) fazem os links diretos abrirem ao recarregar a página. Sem a API atrás do `/api`, só o painel e a TV simulados funcionam; a pesquisa mostra que não deu para abrir.
+O build também é um site estático comum, que pode ir para uma hospedagem estática numa demonstração: `vercel.json` (Vercel) e `public/_redirects` (Netlify e Cloudflare Pages) fazem os links diretos abrirem ao recarregar a página. Sem a API atrás do `/api`, só a TV simulada funciona; a pesquisa e o painel mostram que não deu para abrir.
 
 ## Documentos
 

@@ -1,6 +1,6 @@
 // Regras que, no sistema real, existem só na API. O front nunca as repete:
 // ele exibe a classificação e as permissões que recebe.
-import type { Classificacao, Perfil, Permissao } from '@/lib/api/tipos'
+import type { Classificacao } from '@/lib/api/tipos'
 
 export interface Limites {
   npsBaixa: number
@@ -47,31 +47,5 @@ export function calcularNps(notas: number[]): number | null {
   const detratores = notas.filter((n) => n <= 6).length
   return Math.round(((promotores - detratores) / notas.length) * 100)
 }
-
-const LEITURA: Permissao[] = ['dashboard:ver', 'exportacao:resumo']
-const ANALISE: Permissao[] = [...LEITURA, 'respostas:ver', 'comentarios:ver', 'exportacao:detalhada']
-
-export const PERMISSOES_POR_PERFIL: Record<Perfil, Permissao[]> = {
-  SUPER_ADMIN: [
-    ...ANALISE,
-    'setores:gerenciar',
-    'usuarios:gerenciar',
-    'categorias:gerenciar',
-    'turnos:gerenciar',
-    'tvwall:gerenciar',
-    'configuracoes:gerenciar',
-    'auditoria:ver',
-    'perguntas:gerenciar',
-    'contatos:ver',
-    'contatos:gerenciar',
-    'escalas:gerenciar',
-  ],
-  GESTOR: [...ANALISE, 'perguntas:gerenciar', 'escalas:gerenciar'],
-  OUVIDORIA: [...ANALISE, 'contatos:ver', 'contatos:gerenciar'],
-  VISUALIZADOR: LEITURA,
-}
-
-/** Perfis que enxergam todos os setores; os demais, só os vinculados. */
-export const PERFIS_SEM_ESCOPO: Perfil[] = ['SUPER_ADMIN', 'OUVIDORIA']
 
 export const mascararTelefone = (telefone: string) => `•••• ${telefone.slice(-4)}`

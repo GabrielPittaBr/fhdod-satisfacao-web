@@ -20,7 +20,7 @@ export function criarCliente(opcoes: { baseUrl?: string; fetch?: typeof globalTh
 export const api = criarCliente()
 
 /** O que toda chamada do openapi-fetch devolve: o corpo do sucesso ou o do erro, e a resposta. */
-interface Resultado {
+export interface Resultado {
   data?: unknown
   error?: unknown
   response: Response

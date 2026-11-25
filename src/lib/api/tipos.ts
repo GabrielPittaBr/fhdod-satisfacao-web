@@ -1,37 +1,20 @@
-// Tipos do contrato da API. A pesquisa pública e o erro padrão já vêm do schema.d.ts, gerado do openapi.json
-// por `pnpm api:tipos`. O resto ainda é escrito à mão, com os mesmos nomes de campo do Plano de
-// Desenvolvimento, e troca de lugar quando a sua área for ligada à API (tickets 05 a 09).
+// Tipos do contrato da API. A pesquisa pública, a sessão do painel e o erro padrão já vêm do schema.d.ts,
+// gerado do openapi.json por `pnpm api:tipos`. O resto ainda é escrito à mão, com os mesmos nomes de campo do
+// Plano de Desenvolvimento, e troca de lugar quando a sua área for ligada à API (tickets 06 a 09).
 import type { components } from './schema'
 
 type Contrato = components['schemas']
 
-// Listas de valores que a pesquisa usa: as mesmas do contrato, que o painel também lê.
+// Listas de valores que a pesquisa e a sessão usam: as mesmas do contrato, que o painel também lê.
 export type Canal = Contrato['Canal']
 export type Classificacao = Contrato['Classificacao']
 export type TipoPergunta = Contrato['TipoPergunta']
 export type TipoComentario = Contrato['TipoComentario']
+export type Perfil = Contrato['Perfil']
+export type Permissao = Contrato['Permissao']
 
-export type Perfil = 'SUPER_ADMIN' | 'GESTOR' | 'OUVIDORIA' | 'VISUALIZADOR'
 export type BaseData = 'ATENDIMENTO' | 'ENVIO'
 export type Granularidade = 'DIA' | 'SEMANA' | 'MES'
-
-export type Permissao =
-  | 'setores:gerenciar'
-  | 'usuarios:gerenciar'
-  | 'categorias:gerenciar'
-  | 'turnos:gerenciar'
-  | 'tvwall:gerenciar'
-  | 'configuracoes:gerenciar'
-  | 'auditoria:ver'
-  | 'perguntas:gerenciar'
-  | 'dashboard:ver'
-  | 'respostas:ver'
-  | 'comentarios:ver'
-  | 'contatos:ver'
-  | 'contatos:gerenciar'
-  | 'exportacao:resumo'
-  | 'exportacao:detalhada'
-  | 'escalas:gerenciar'
 
 export interface Envelope<T> {
   data: T
@@ -108,22 +91,10 @@ export interface TelaTv {
   ultimoAcessoEm: string | null
 }
 
-// ---------- Autenticação ----------
+// ---------- Autenticação: do contrato gerado ----------
 
-export interface Sessao {
-  usuario: { id: number; nome: string; email: string; perfil: Perfil; trocarSenha: boolean }
-  permissoes: Permissao[]
-  /** Vazio quando o usuário enxerga todos os setores. */
-  setores: { id: number; nome: string }[]
-  todosSetores: boolean
-}
-
-export interface AcessoDemo {
-  rotulo: string
-  descricao: string
-  email: string
-  senha: string
-}
+/** Quem está logado, o que o perfil permite e quais setores enxerga (`setores` vazio com `todosSetores`). */
+export type Sessao = Contrato['Sessao']
 
 // ---------- Pesquisa pública: do contrato gerado ----------
 

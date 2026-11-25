@@ -1,13 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router'
+import { Navigate, useLocation, useNavigate } from 'react-router'
 import logo from '@/assets/logo.png'
 import { CampoTexto, ErroDoFormulario } from '@/components/formulario'
 import { aplicarErroDaApi } from '@/lib/salvar'
 import { Button } from '@/components/ui/button'
 import { useSessao } from '@/stores/sessao'
-import { entrar, listarAcessosDemo } from '../api'
+import { entrar } from '../api'
 import { loginSchema, type DadosLogin } from '../schemas'
 
 /** /login: entrada do painel da gestão. */
@@ -68,48 +68,6 @@ export default function LoginPage() {
           {login.isPending ? 'Entrando…' : 'Entrar no painel'}
         </Button>
       </form>
-
-      <AcessosDemo ocupado={login.isPending} aoEscolher={(dados) => login.mutate(dados)} />
     </main>
-  )
-}
-
-/** Só enquanto os dados são simulados: entra como cada perfil com um toque. Some quando a API chegar. */
-function AcessosDemo({ ocupado, aoEscolher }: { ocupado: boolean; aoEscolher: (dados: DadosLogin) => void }) {
-  const demo = listarAcessosDemo()
-  return (
-    <section aria-labelledby="demo" className="mt-10 border-t pt-6">
-      <h2 id="demo" className="font-semibold">
-        Demonstração com dados simulados
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">Escolha um perfil para entrar sem digitar a senha.</p>
-      <ul className="mt-3 grid gap-2">
-        {demo.usuarios.map((acesso) => (
-          <li key={acesso.email}>
-            <button
-              type="button"
-              disabled={ocupado}
-              onClick={() => aoEscolher({ email: acesso.email, senha: acesso.senha })}
-              className="flex min-h-12 w-full flex-wrap items-baseline gap-x-2 rounded-lg border border-input/60 bg-card px-3 py-2 text-left transition-colors hover:bg-muted active:translate-y-px disabled:opacity-50"
-            >
-              <span className="font-semibold">{acesso.rotulo}</span>
-              <span className="text-sm text-muted-foreground">{acesso.descricao}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      <ul className="mt-4 grid gap-1 text-sm">
-        {demo.links.map((link) => (
-          <li key={link.url}>
-            <Link
-              to={link.url}
-              className="inline-flex min-h-9 items-center font-semibold text-primary underline underline-offset-4 hover:no-underline"
-            >
-              {link.rotulo}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
   )
 }
