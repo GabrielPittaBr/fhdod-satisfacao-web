@@ -161,6 +161,9 @@ export default function TvPage() {
     refetchIntervalInBackground: true,
     staleTime: 0,
     retry: false,
+    // tenta mesmo com o navegador dizendo que está offline: a falha mostra "Sem conexão" no rodapé, com os
+    // últimos números na tela; pausada, a consulta deixaria o rodapé dizendo "Atualizado às" sem atualizar
+    networkMode: 'always',
   })
 
   useEffect(() => {

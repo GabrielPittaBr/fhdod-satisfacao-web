@@ -26,9 +26,10 @@ export const erroDaApi = (
  * criado) e deixa uma sessão aberta, com o token `TOKEN`. Por isso, o api.ts testado é importado depois,
  * com `await import(...)` num `beforeAll` registrado depois desta chamada.
  *
- * Cada rota é `"MÉTODO /caminho"`. Uma chamada sem rota prevista falha o teste; uma sem o token, leva 401.
+ * Cada rota é `"MÉTODO /caminho"`. Uma chamada sem rota prevista falha o teste; uma sem o token, leva 401. As
+ * rotas de `semSessao` não usam a sessão do painel (a TV entra com o token da tela): recebem o pedido como veio.
  */
-export function usarApiFalsa() {
+export function usarApiFalsa({ semSessao = [] }: { semSessao?: string[] } = {}) {
   const rotas = new Map<string, Rota>()
   const pedidos: Request[] = []
 
@@ -36,10 +37,10 @@ export function usarApiFalsa() {
     vi.stubGlobal('location', { origin: 'http://site.teste' })
     vi.stubGlobal('fetch', async (pedido: Request) => {
       pedidos.push(pedido)
-      if (pedido.headers.get('Authorization') !== `Bearer ${TOKEN}`) {
+      const caminho = `${pedido.method} ${new URL(pedido.url).pathname}`
+      if (!semSessao.includes(caminho) && pedido.headers.get('Authorization') !== `Bearer ${TOKEN}`) {
         return erroDaApi(401, 'NAO_AUTENTICADO', 'Sua sessão terminou. Entre de novo.')
       }
-      const caminho = `${pedido.method} ${new URL(pedido.url).pathname}`
       const rota = rotas.get(caminho)
       if (!rota) throw new Error(`rota não prevista no teste: ${caminho}`)
       return rota(pedido)
