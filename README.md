@@ -2,7 +2,7 @@
 
 Front-end do Sistema de Avaliação da Fundação Hospitalar Doutor Oswaldo Diesel: pesquisa de satisfação do paciente (celular, tablet e totem), painel da gestão e TV Wall.
 
-Enquanto a API não existe, os dados são simulados no próprio navegador (`src/mocks/`). Uma avaliação enviada na pesquisa aparece no painel e na TV abertos no mesmo navegador.
+A pesquisa do paciente já usa a [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela. O painel e a TV ainda usam dados simulados no próprio navegador (`src/mocks/`), até cada área ser ligada à API (tickets 05 a 09). Por isso, por enquanto, uma avaliação enviada na pesquisa não aparece no painel nem na TV.
 
 Antes de trabalhar no repositório, leia o [`AGENTS.md`](AGENTS.md): fluxo de branches, padrão de commits, tickets, definição de pronto e as regras que já valem no front. As regras de negócio estão no [Plano de Desenvolvimento](https://github.com/GabrielPittaBr/fhdod-satisfacao-api/blob/develop/docs/Plano%20de%20Desenvolvimento%20-%20FHDOD.md), no repositório da API.
 
@@ -18,7 +18,7 @@ pnpm install   # dependências e hooks do Git
 pnpm dev
 ```
 
-Abra `http://localhost:5173/login`. A tela de login tem atalhos para entrar como cada perfil e links para a pesquisa, o totem e a TV.
+Abra `http://localhost:5173/login`. A tela de login tem atalhos para entrar como cada perfil e links para a pesquisa, o totem e a TV. O painel e a TV funcionam sem a API; a pesquisa precisa dela (veja a seção seguinte).
 
 | Comando | O que faz |
 | --- | --- |
@@ -29,20 +29,38 @@ Abra `http://localhost:5173/login`. A tela de login tem atalhos para entrar como
 | `pnpm typecheck` | Checagem de tipos do TypeScript |
 | `pnpm test` | Testes (Vitest) |
 | `pnpm format` | Formata o projeto com o Prettier |
+| `pnpm api:tipos` | Gera `src/lib/api/schema.d.ts` a partir do `openapi.json` da API |
 
 Antes de cada commit, os hooks do Git rodam o ESLint e o Prettier nos arquivos alterados e conferem a mensagem do commit. Em todo pull request, o CI do GitHub Actions roda lint, tipos, testes e build.
+
+### Com a API
+
+O `pnpm dev` repassa tudo o que começa com `/api` para a API rodando na máquina, em `http://localhost:3333`, como o Caddy faz em produção. O front chama a API sempre no mesmo endereço do site, então não há CORS no caminho. Para subir a API, siga o README dela (`docker compose up -d`, `pnpm db:deploy`, `pnpm db:seed` e `pnpm dev`, na pasta `../fhdod-satisfacao-api`).
+
+A API ainda não tem dados de demonstração (ticket 12 de lá), e o painel daqui ainda é simulado: para a pesquisa abrir, cadastre um setor com perguntas pelo Swagger da API, em `http://localhost:3333/api/docs`, entrando com o Super Admin do seed (`POST /auth/login`, a troca da senha provisória em `PATCH /auth/senha`, depois `POST /setores` e `POST /setores/{setorId}/perguntas`). Com o slug `pronto-atendimento`, os endereços abaixo abrem a pesquisa.
+
+O `.env` é opcional. Copie o [`.env.example`](.env.example) para `.env` só se precisar mudar um padrão:
+
+| Variável | Padrão | Para quê |
+| --- | --- | --- |
+| `API_URL` | `http://localhost:3333` | Para onde o `pnpm dev` e o `pnpm preview` repassam o `/api` |
+| `OPENAPI_JSON` | `../fhdod-satisfacao-api/openapi.json` | De onde o `pnpm api:tipos` lê o contrato: um caminho ou o endereço do `openapi.json` na API rodando |
+
+### Tipos do contrato
+
+Os tipos das rotas, dos corpos e dos erros vêm do `openapi.json` que a API gera e commita. Quando o contrato mudar na API, rode `pnpm api:tipos` e commite o `src/lib/api/schema.d.ts` gerado, que nunca é editado à mão. O cliente HTTP ([`src/lib/api/cliente.ts`](src/lib/api/cliente.ts)) usa esses tipos: o endereço, os parâmetros e o corpo de cada chamada são conferidos pelo TypeScript.
 
 ## Endereços
 
 | Endereço | O que é |
 | --- | --- |
-| `/s/pronto-atendimento` | Pesquisa do setor (o QR Code leva para cá) |
+| `/s/pronto-atendimento` | Pesquisa do setor (o QR Code leva para cá), com o setor cadastrado na API |
 | `/totem/pronto-atendimento` | A mesma pesquisa no modo totem |
-| `/tv#demo-recepcao-fhdod` | TV Wall da tela de demonstração |
-| `/login` e `/painel` | Painel da gestão |
-| `/s/maternidade` | Setor inativo: mostra a mensagem de pesquisa indisponível |
+| `/tv#demo-recepcao-fhdod` | TV Wall da tela de demonstração (simulada) |
+| `/login` e `/painel` | Painel da gestão (simulado) |
+| `/s/<setor-inativo>` | Um setor desativado na API, ou um slug que não existe: mostra a mensagem de pesquisa indisponível |
 
-Para testar as telas de erro, acrescente ao endereço `?falha=tudo` (toda chamada falha) ou `?falha=envio` (o primeiro envio da pesquisa é gravado, mas a confirmação não chega).
+Para testar as telas de erro do painel e da TV, acrescente ao endereço `?falha=tudo` (toda chamada simulada falha). Na pesquisa, as falhas são as de verdade: com a API parada, a pesquisa não abre e oferece "Tentar de novo"; sem internet no meio, as respostas continuam na tela e a mesma chave vai na nova tentativa, sem gravar a avaliação duas vezes.
 
 O Super Admin pode voltar aos dados iniciais pelo menu do usuário, em "Restaurar dados de demonstração".
 
@@ -62,7 +80,7 @@ O build acontece dentro do Docker, com o Node 26 e o pnpm do `packageManager`: n
 docker run --rm -p 8080:80 fhdod-satisfacao-web
 ```
 
-Abra `http://localhost:8080/s/pronto-atendimento`. Sem `DOMAIN`, o Caddy serve em HTTP na porta 80 do container e avisa no log que não há HTTPS, o que é o esperado na máquina. Enquanto as telas usam os dados simulados, a imagem funciona sozinha; só o `/api` precisa da API no ar.
+Abra `http://localhost:8080/s/pronto-atendimento`. Sem `DOMAIN`, o Caddy serve em HTTP na porta 80 do container e avisa no log que não há HTTPS, o que é o esperado na máquina. O painel e a TV, ainda simulados, funcionam sozinhos; a pesquisa e o `/api` precisam da API no ar.
 
 Com a API rodando na máquina (`docker compose up -d` e `pnpm dev`, na pasta da API):
 
@@ -125,7 +143,7 @@ O que é texto (HTML, JS, CSS, JSON e SVG) sai comprimido com zstd ou gzip, conf
 
 ### Hospedagem estática
 
-O build também é um site estático comum, que pode ir para uma hospedagem estática numa demonstração, sem a API: `vercel.json` (Vercel) e `public/_redirects` (Netlify e Cloudflare Pages) fazem os links diretos abrirem ao recarregar a página.
+O build também é um site estático comum, que pode ir para uma hospedagem estática numa demonstração: `vercel.json` (Vercel) e `public/_redirects` (Netlify e Cloudflare Pages) fazem os links diretos abrirem ao recarregar a página. Sem a API atrás do `/api`, só o painel e a TV simulados funcionam; a pesquisa mostra que não deu para abrir.
 
 ## Documentos
 

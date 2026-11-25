@@ -106,7 +106,7 @@ Se um critério não puder ser cumprido como está escrito, não o pule em silê
 Uma tarefa do front só está pronta quando:
 
 - [ ] **a tela funciona no celular e no computador**: testada pelo menos em 360×740 e em 1366×768, sem rolagem horizontal da página, com toque, mouse e teclado. O totem e a TV também são testados nos tamanhos deles (seção 11 do plano do front) quando a tarefa mexe neles;
-- [ ] **os tipos da API vêm do contrato gerado**: `src/lib/api/schema.d.ts`, criado por `pnpm api:tipos` a partir do `openapi.json` da API, nunca escrito nem editado à mão. O gerador chega no ticket 04; até lá, e até cada área ser ligada à API, valem os tipos escritos à mão de `src/lib/api/tipos.ts`;
+- [ ] **os tipos da API vêm do contrato gerado**: `src/lib/api/schema.d.ts`, criado por `pnpm api:tipos` a partir do `openapi.json` da API, nunca escrito nem editado à mão. A pesquisa já usa os tipos gerados; até cada outra área ser ligada à API, valem os tipos escritos à mão de `src/lib/api/tipos.ts`;
 - [ ] **`pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build` passam** na máquina e no CI, incluindo os testes da regra nova;
 - [ ] a entrega está **registrada em `docs/registros/`**;
 - [ ] os critérios de aceite do ticket estão marcados e o status está `done`;
@@ -132,13 +132,15 @@ Quando a entrega mexe em telas, entra também **Como foi verificado**: os fluxos
 ### Só a camada de chamadas conversa com a API
 
 ```text
-componente → hook (TanStack Query) → features/<assunto>/api.ts → API (hoje, src/mocks/)
+componente → hook (TanStack Query) → features/<assunto>/api.ts → cliente HTTP → API
+                                                                 (painel e TV, por enquanto: src/mocks/)
 ```
 
 - **Só o `api.ts` de cada assunto conversa com a API** e, enquanto ela não chega, com `src/mocks/`. Componentes, páginas e hooks nunca chamam `fetch`, o cliente HTTP nem os mocks diretamente.
 - Cada função do `api.ts` corresponde a um endpoint do contrato: `buscarPesquisa(slug)` ↔ `GET /publico/setores/:slug/pesquisa`.
+- O `api.ts` chama a API pelo cliente de `src/lib/api/cliente.ts` (openapi-fetch, tipado pelo `schema.d.ts`), sempre dentro de `pedir(...)`: ele devolve o corpo do sucesso ou lança o `ErroApi`. Os endereços são os do contrato, com o `/api/v1` na frente, e vão ao mesmo domínio do site.
 - Todas as leituras e envios passam pelo TanStack Query, para os estados de carregamento e erro existirem em toda tela.
-- Erros chegam às telas como `ErroApi` (`src/lib/api/erro.ts`), com status, código, mensagem, detalhes e `requestId`. A tela mostra a mensagem da API, que já vem escrita para quem está na tela, e os erros de validação vão para o campo do formulário indicado em `detalhes` (`src/lib/salvar.ts`).
+- Erros chegam às telas como `ErroApi` (`src/lib/api/erro.ts`), com status, código, mensagem, detalhes e o `requestId` que a API mandou. Sem rede, o status é 0, com a mensagem de sem conexão. A tela mostra a mensagem da API, que já vem escrita para quem está na tela, e os erros de validação vão para o campo do formulário indicado em `detalhes` (`src/lib/salvar.ts`).
 
 ### O front nunca recalcula classificação, NPS nem permissão
 
@@ -182,7 +184,7 @@ As decisões dos registros de 10/11 e 11/11 valem para toda tela nova ou alterad
 
 ## Segurança e LGPD
 
-- **Nenhum segredo no Git.** O `.env` nunca é commitado; quando o `.env.example` chegar (ticket 04), ele traz só os nomes das variáveis e exemplos falsos.
+- **Nenhum segredo no Git.** O `.env` nunca é commitado; o `.env.example` traz só os nomes das variáveis e exemplos falsos. Nenhuma variável do front começa com `VITE_`, então nada do `.env` vai para o site.
 - **Nenhum dado real de paciente**, em lugar nenhum: dados simulados, testes, prints, issues, PRs e registros usam só dados inventados, com telefones claramente fictícios.
 - Telefone, senha e tokens não vão para o `console` nem para mensagens de erro. O único token que aparece num endereço é o da TV, e ele fica depois do `#`, a parte que o navegador nunca envia ao servidor.
 - Ao usar uma ferramenta de IA, não cole nela o `.env`, dados reais nem logs de produção.
@@ -194,18 +196,21 @@ Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fic
 | Comando | O que faz |
 | --- | --- |
 | `pnpm install` | Instala as dependências e liga os hooks do Git |
-| `pnpm dev` | Servidor de desenvolvimento em `http://localhost:5173` |
+| `pnpm dev` | Servidor de desenvolvimento em `http://localhost:5173`, que repassa `/api` para a API local (`API_URL`, padrão `http://localhost:3333`) |
 | `pnpm build` | Gera o site estático em `dist/` |
 | `pnpm preview` | Serve o `dist/` para conferir o build |
 | `pnpm lint` | ESLint |
 | `pnpm typecheck` | Checagem de tipos do TypeScript |
 | `pnpm test` | Testes (Vitest) |
-| `pnpm format` | Formata o projeto com o Prettier (menos os `.md` e o `pnpm-lock.yaml`) |
+| `pnpm format` | Formata o projeto com o Prettier (menos os `.md`, o `pnpm-lock.yaml` e o `schema.d.ts`) |
+| `pnpm api:tipos` | Gera `src/lib/api/schema.d.ts` a partir do `openapi.json` da API (`OPENAPI_JSON`, padrão `../fhdod-satisfacao-api/openapi.json`) |
 
 - **Antes de cada commit**, o Husky roda o ESLint e o Prettier nos arquivos alterados (lint-staged), e o commitlint confere a mensagem: Conventional Commits, com os tipos deste arquivo e sem coautoria nem assinatura do Claude. É a mesma configuração da API.
 - **CI:** o `.github/workflows/ci.yml` instala com o pnpm (com cache) e roda lint, tipos, testes e build em todo pull request e em cada push na `develop` e na `main`. O modelo de PR fica em `.github/pull_request_template.md`.
 - **Formatação:** o commit que passou o Prettier no projeto todo está no `.git-blame-ignore-revs`, que o `git blame` do GitHub pula. Para o da máquina pular também: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
-- **Dados simulados:** enquanto a API não chega, `?falha=tudo` (toda chamada falha) e `?falha=envio` (o primeiro envio da pesquisa é gravado, mas a confirmação não chega) testam as telas de erro. A tela de login tem atalhos para entrar como cada perfil, e o Super Admin volta aos dados iniciais pelo menu do usuário, em "Restaurar dados de demonstração".
+- **Contrato mudou na API:** rode `pnpm api:tipos` e commite o `schema.d.ts` gerado no mesmo PR que usa o contrato novo. O ESLint e o Prettier não mexem nele.
+- **Pesquisa:** usa a API de verdade; para abrir com o `pnpm dev`, a API precisa estar rodando, com um setor cadastrado (README, em "Com a API").
+- **Dados simulados:** enquanto o painel e a TV não são ligados à API, `?falha=tudo` (toda chamada simulada falha) testa as telas de erro deles. A tela de login tem atalhos para entrar como cada perfil, e o Super Admin volta aos dados iniciais pelo menu do usuário, em "Restaurar dados de demonstração".
 
 ## Onde estão as coisas
 
@@ -215,7 +220,8 @@ Node.js 26 (a versão fica no `.nvmrc`, a mesma da API) e pnpm 12 (a versão fic
 | Telas, interface, dispositivos e acessibilidade | [`docs/plano-frontend.md`](docs/plano-frontend.md) |
 | Tickets | [`docs/tickets/`](docs/tickets/) e as issues do GitHub |
 | Registros das entregas e decisões de interface | [`docs/registros/`](docs/registros/) |
-| Tipos do contrato e erro padrão | [`src/lib/api/`](src/lib/api/) |
+| Cliente HTTP, tipos gerados do contrato e erro padrão | [`src/lib/api/`](src/lib/api/) e o gerador, em [`scripts/api-tipos.mjs`](scripts/api-tipos.mjs) |
+| Variáveis do ambiente de desenvolvimento | [`.env.example`](.env.example) |
 | Dados simulados e as regras que serão da API | [`src/mocks/`](src/mocks/) |
 | Cores, fonte e temas | [`src/styles/globals.css`](src/styles/globals.css) |
 | CI e modelo de pull request | [`.github/`](.github/) |
