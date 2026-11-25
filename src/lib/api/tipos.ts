@@ -1,6 +1,7 @@
-// Tipos do contrato da API. A pesquisa pública, a sessão do painel, os cadastros e o erro padrão já vêm do
-// schema.d.ts, gerado do openapi.json por `pnpm api:tipos`. O resto ainda é escrito à mão, com os mesmos nomes
-// de campo do Plano de Desenvolvimento, e troca de lugar quando a sua área for ligada à API (tickets 07 a 09).
+// Tipos do contrato da API. A pesquisa pública, a sessão do painel, os cadastros, os indicadores, as respostas,
+// os pedidos de retorno e o erro padrão já vêm do schema.d.ts, gerado do openapi.json por `pnpm api:tipos`. O
+// resto (as telas e os indicadores da TV) ainda é escrito à mão, com os mesmos nomes de campo do Plano de
+// Desenvolvimento, e troca de lugar quando a TV for ligada à API (ticket 08).
 import type { components, paths } from './schema'
 
 type Contrato = components['schemas']
@@ -13,23 +14,17 @@ export type TipoComentario = Contrato['TipoComentario']
 export type Perfil = Contrato['Perfil']
 export type Permissao = Contrato['Permissao']
 
-export type BaseData = 'ATENDIMENTO' | 'ENVIO'
-export type Granularidade = 'DIA' | 'SEMANA' | 'MES'
+export type BaseData = Contrato['BaseData']
+export type Granularidade = Contrato['Granularidade']
+export type StatusRetorno = Contrato['StatusRetorno']
 
+/** O envelope das respostas de sucesso da API. Só os dados simulados da TV ainda o usam. */
 export interface Envelope<T> {
   data: T
 }
 
-export interface Meta {
-  pagina: number
-  porPagina: number
-  total: number
-}
-
-export interface Lista<T> {
-  data: T[]
-  meta: Meta
-}
+/** A página de uma lista: `meta.total` conta todas as páginas. */
+export type Meta = Contrato['Meta']
 
 export type DetalheErro = Contrato['DetalheErro']
 
@@ -39,6 +34,12 @@ export type CorpoDe<Caminho extends keyof paths, Metodo extends 'post' | 'put' |
     requestBody?: { content: { 'application/json': infer Corpo } }
   }
     ? Corpo
+    : never
+
+/** Os filtros que uma rota GET do contrato aceita na query string: `ConsultaDe<'/api/v1/respostas'>`. */
+export type ConsultaDe<Caminho extends keyof paths> =
+  NonNullable<paths[Caminho]['get']> extends { parameters: { query?: infer Consulta } }
+    ? NonNullable<Consulta>
     : never
 
 // ---------- Cadastros: do contrato gerado ----------
@@ -75,131 +76,30 @@ export type EnvioResposta = Contrato['EnvioResposta']
 export type RespostaCriada = Contrato['RespostaCriada']
 export type Complemento = Contrato['Complemento']
 
-// ---------- Painel ----------
+// ---------- Painel: do contrato gerado ----------
 
-export interface FiltrosDashboard {
-  inicio: string
-  fim: string
-  base: BaseData
-  setorId?: number
-  turnoId?: number
-  canal?: Canal
-}
+/**
+ * Os filtros de todos os blocos do dashboard: o período (`inicio` e `fim`, incluídos) comparado com a `base`
+ * (o dia do atendimento ou o do envio), o setor, o turno e o canal.
+ */
+export type FiltrosDashboard = ConsultaDe<'/api/v1/dashboard/resumo'>
+export type Resumo = Contrato['Resumo']
+export type NpsSetor = Contrato['NpsSetor']
+/** `periodo` é o primeiro dia: o próprio dia, a segunda-feira da semana ou o dia 1 do mês. */
+export type PontoEvolucao = Contrato['PontoEvolucao']
+export type IndicadorCategoria = Contrato['IndicadorCategoria']
+export type ItemRanking = Contrato['ItemRanking']
+export type Ranking = Contrato['Ranking']
+export type ComentarioRecente = Contrato['ComentarioRecente']
 
-export interface Resumo {
-  nps: number | null
-  total: number
-  promotores: number
-  neutros: number
-  detratores: number
-  notasBaixas: number
-  baixissimas: number
-  /** Média das notas de 1 a 5 de todas as perguntas respondidas. */
-  mediaEscala: number | null
-}
-
-export interface NpsSetor {
-  setorId: number
-  setor: string
-  nps: number | null
-  total: number
-}
-
-export interface PontoEvolucao {
-  /** Primeiro dia do período ("AAAA-MM-DD"). */
-  periodo: string
-  nps: number | null
-  total: number
-}
-
-export interface IndicadorCategoria {
-  categoriaId: number
-  categoria: string
-  media: number | null
-  /** % de notas 4 e 5 */
-  percentual45: number | null
-  total: number
-}
-
-export interface ItemRanking {
-  setorId: number
-  setor: string
-  categoriaId: number
-  categoria: string
-  media: number
-  percentual45: number
-  total: number
-}
-
-export interface Ranking {
-  melhores: ItemRanking[]
-  piores: ItemRanking[]
-}
-
-export interface ComentarioRecente {
-  id: number
-  respostaId: number
-  tipo: TipoComentario
-  texto: string
-  setor: string
-  dataAtendimento: string
-  enviadoEm: string
-  classificacao: Classificacao
-}
-
-export interface FiltrosRespostas extends Partial<FiltrosDashboard> {
-  classificacao?: Classificacao
-  comComentario?: boolean
-  comRetorno?: boolean
-  pagina?: number
-  porPagina?: number
-  ordenarPor?: 'dataAtendimento' | 'enviadoEm' | 'nps'
-  ordem?: 'asc' | 'desc'
-}
-
-export interface RespostaResumo {
-  id: number
-  setorId: number
-  setor: string
-  canal: Canal
-  dataAtendimento: string
-  turno: string
-  nps: number
-  classificacao: Classificacao
-  enviadoEm: string
-  temComentario: boolean
-  pediuRetorno: boolean
-}
-
-export interface ItemResposta {
-  perguntaId: number
-  perguntaTexto: string
-  categoria: string
-  tipo: TipoPergunta
-  valorNumero: number | null
-  valorTexto: string | null
-  /** Só para notas de 1 a 5; a API já devolve pronta. */
-  classificacao: Classificacao | null
-}
-
-export interface RespostaDetalhe extends RespostaResumo {
-  itens: ItemResposta[]
-  comentario: { tipo: TipoComentario; texto: string } | null
-  contato: { id: number; telefoneMascarado: string; status: 'NOVO' } | null
-}
-
-export interface PedidoRetorno {
-  id: number
-  respostaId: number
-  setor: string
-  dataAtendimento: string
-  nps: number
-  classificacao: Classificacao
-  comentario: { tipo: TipoComentario; texto: string } | null
-  telefoneMascarado: string
-  consentimentoEm: string
-  status: 'NOVO'
-}
+/** Os filtros do dashboard, todos opcionais, mais a classificação, o comentário, o retorno, a página e a ordem. */
+export type FiltrosRespostas = ConsultaDe<'/api/v1/respostas'>
+export type RespostaResumo = Contrato['RespostaResumo']
+/** A `classificacao` vem pronta da API, só nas notas de 1 a 5. */
+export type ItemResposta = Contrato['ItemResposta']
+/** O telefone do `contato` vem mascarado; o número completo, só no "Revelar telefone". */
+export type RespostaDetalhe = Contrato['RespostaDetalhe']
+export type PedidoRetorno = Contrato['PedidoRetorno']
 
 // ---------- TV Wall ----------
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calcularNps, classificarNota, classificarNps, classificarResposta, mascararTelefone } from './regras'
+import { calcularNps, classificarNota, classificarNps, classificarResposta } from './regras'
 import { gerarHistorico } from './seed/historico'
 
 describe('classificação', () => {
@@ -48,12 +48,6 @@ describe('cálculo do NPS', () => {
 })
 
 // As permissões de cada perfil vêm do /auth/me desde o ticket 05; quem as testa é a API.
-describe('privacidade', () => {
-  it('telefone mascarado mostra só os 4 últimos dígitos', () => {
-    expect(mascararTelefone('51900000042')).toBe('•••• 0042')
-  })
-})
-
 describe('histórico gerado', () => {
   const hoje = new Date(2026, 10, 10, 12)
   const historico = gerarHistorico(hoje)

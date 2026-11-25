@@ -3,7 +3,7 @@ import { TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { mensagemDeErro } from '@/lib/api/erro'
+import { mensagemGeral } from '@/lib/api/erro'
 import { cn } from '@/lib/utils'
 
 /** Cabeçalho e corpo de uma página do painel. */
@@ -92,7 +92,7 @@ export function Consulta<T>({
     return (
       <div role="alert" className="flex flex-col items-center gap-3 py-6 text-center">
         <TriangleAlert aria-hidden className="size-6 text-aviso" />
-        <p className="text-sm">{mensagemDeErro(consulta.error, 'Não deu para carregar estes dados.')}</p>
+        <p className="text-sm">{mensagemGeral(consulta.error, 'Não deu para carregar estes dados.')}</p>
         <Button variant="outline" size="sm" onClick={() => consulta.refetch()}>
           Tentar de novo
         </Button>

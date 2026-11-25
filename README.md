@@ -2,7 +2,7 @@
 
 Front-end do Sistema de Avaliação da Fundação Hospitalar Doutor Oswaldo Diesel: pesquisa de satisfação do paciente (celular, tablet e totem), painel da gestão e TV Wall.
 
-A pesquisa do paciente, o acesso ao painel e os cadastros já usam a [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela, a gestão entra no painel com a conta de verdade, e os setores, as categorias, os turnos, as perguntas e os usuários do painel são lidos e gravados lá. Os indicadores, as respostas, os pedidos de retorno, as exportações e a TV ainda usam dados simulados no próprio navegador (`src/mocks/`), até cada área ser ligada à API (tickets 07 a 09). Por isso, por enquanto, uma avaliação enviada na pesquisa não aparece no painel nem na TV.
+A pesquisa do paciente, o painel e os cadastros já usam a [API](https://github.com/GabrielPittaBr/fhdod-satisfacao-api): abrir a pesquisa, enviar a avaliação e mandar o comentário e o telefone gravam no PostgreSQL dela, a gestão entra no painel com a conta de verdade, os setores, as categorias, os turnos, as perguntas e os usuários são lidos e gravados lá, e o dashboard, as respostas e os pedidos de retorno mostram os dados de lá. Uma avaliação enviada na pesquisa aparece no dashboard na atualização seguinte (a cada minuto, ou ao trocar um filtro). As exportações e a TV ainda usam dados simulados no próprio navegador (`src/mocks/`), até serem ligadas à API (tickets 08 e 09).
 
 Antes de trabalhar no repositório, leia o [`AGENTS.md`](AGENTS.md): fluxo de branches, padrão de commits, tickets, definição de pronto e as regras que já valem no front. As regras de negócio estão no [Plano de Desenvolvimento](https://github.com/GabrielPittaBr/fhdod-satisfacao-api/blob/develop/docs/Plano%20de%20Desenvolvimento%20-%20FHDOD.md), no repositório da API.
 
@@ -40,9 +40,10 @@ O `pnpm dev` repassa tudo o que começa com `/api` para a API rodando na máquin
 A API ainda não tem dados de demonstração (ticket 12 de lá). Depois de entrar com o Super Admin, cadastre pelo próprio painel o que a pesquisa e os outros perfis precisam:
 
 - para a pesquisa abrir, um setor com perguntas, em "Setores e perguntas". Com o endereço `pronto-atendimento`, os links abaixo abrem a pesquisa;
-- para entrar com os outros perfis, os usuários, em "Usuários": a senha provisória aparece uma vez só, ao criar a conta ou ao redefinir a senha, com o botão de copiar.
+- para entrar com os outros perfis, os usuários, em "Usuários": a senha provisória aparece uma vez só, ao criar a conta ou ao redefinir a senha, com o botão de copiar;
+- para o dashboard, as respostas e os pedidos de retorno terem o que mostrar, avaliações respondidas na pesquisa. O telefone para retorno é oferecido na avaliação baixa.
 
-As telas ainda simuladas (indicadores, respostas, pedidos de retorno e exportações) usam as permissões e os setores da sessão de verdade, com os dados simulados de `src/mocks/`. Os números delas só batem com os setores da API quando os ids coincidem: cadastrados nesta ordem, Pronto Atendimento, Internação, Raio-X, Laboratório, Ambulatório e Maternidade ficam com os ids dos simulados.
+A exportação, ainda simulada, usa as permissões e os setores da sessão de verdade, com os dados simulados de `src/mocks/`: os números dela não são os do dashboard até o ticket 09.
 
 O `.env` é opcional. Copie o [`.env.example`](.env.example) para `.env` só se precisar mudar um padrão:
 
@@ -62,10 +63,10 @@ Os tipos das rotas, dos corpos e dos erros vêm do `openapi.json` que a API gera
 | `/s/pronto-atendimento` | Pesquisa do setor (o QR Code leva para cá), com o setor cadastrado na API |
 | `/totem/pronto-atendimento` | A mesma pesquisa no modo totem |
 | `/tv#demo-recepcao-fhdod` | TV Wall da tela de demonstração (simulada) |
-| `/login` e `/painel` | Painel da gestão: login, sessão e cadastros na API; indicadores, respostas, pedidos de retorno e telas de TV ainda simulados |
+| `/login` e `/painel` | Painel da gestão: login, sessão, cadastros, indicadores, respostas e pedidos de retorno na API; exportações e telas de TV ainda simuladas |
 | `/s/<setor-inativo>` | Um setor desativado na API, ou um slug que não existe: mostra a mensagem de pesquisa indisponível |
 
-Para testar as telas de erro das áreas simuladas do painel e da TV, acrescente ao endereço `?falha=tudo` (toda chamada simulada falha). Na pesquisa e nos cadastros, as falhas são as de verdade: com a API parada, a pesquisa não abre e oferece "Tentar de novo"; sem internet no meio, as respostas continuam na tela e a mesma chave vai na nova tentativa, sem gravar a avaliação duas vezes.
+Para testar as telas de erro das áreas simuladas (a exportação, as telas de TV e a TV), acrescente ao endereço `?falha=tudo` (toda chamada simulada falha). Na pesquisa, nos cadastros, nos indicadores, nas respostas e nos pedidos de retorno, as falhas são as de verdade: com a API parada, a pesquisa não abre e oferece "Tentar de novo"; sem internet no meio, as respostas continuam na tela e a mesma chave vai na nova tentativa, sem gravar a avaliação duas vezes.
 
 Para voltar aos dados simulados iniciais, apague os dados do site no navegador (o "banco" simulado fica no `localStorage`, na chave `fhdod-mock-banco`).
 

@@ -26,7 +26,7 @@ import { ROTULO_CANAL } from '@/lib/rotulos'
 import { usePode } from '@/stores/sessao'
 import { buscarResposta, listarRespostas } from '../api'
 
-// A ordenação e a paginação são feitas pela API (aqui, pelo mock): a tabela só mostra a página recebida.
+// A ordenação e a paginação são feitas pela API: a tabela só mostra a página recebida.
 const recursos = tableFeatures({ rowSortingFeature, rowPaginationFeature })
 const coluna = createColumnHelper<typeof recursos, RespostaResumo>()
 const SEM_LINHAS: RespostaResumo[] = []
@@ -194,6 +194,7 @@ function Detalhe({ id, aoFechar }: { id: number | null; aoFechar: () => void }) 
 }
 
 const SIM_NAO = { sim: true, nao: false } as const
+const CLASSIFICACOES: readonly string[] = ['NORMAL', 'BAIXA', 'BAIXISSIMA'] satisfies Classificacao[]
 
 /** /painel/respostas: cada resposta, com filtros, ordenação e paginação. */
 export default function RespostasPage() {
@@ -202,10 +203,13 @@ export default function RespostasPage() {
   const [ordenacao, setOrdenacao] = useState<SortingState>([{ id: 'enviadoEm', desc: true }])
   const [pagina, setPagina] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
   // estes filtros também moram na URL, junto com os do dashboard
-  const classificacao = (params.get('classificacao') as Classificacao | null) ?? undefined
+  // um valor que a API não conhece (endereço digitado à mão) vale como "Todas", em vez de virar erro
+  const pedida = params.get('classificacao') ?? ''
+  const classificacao = CLASSIFICACOES.includes(pedida) ? (pedida as Classificacao) : undefined
   const comComentario = SIM_NAO[params.get('comentario') as keyof typeof SIM_NAO]
   const comRetorno = SIM_NAO[params.get('retorno') as keyof typeof SIM_NAO]
-  const aberta = Number(params.get('resposta')) || null
+  const id = Number(params.get('resposta'))
+  const aberta = Number.isSafeInteger(id) && id > 0 ? id : null
 
   const pedido: FiltrosRespostas = {
     ...filtros,

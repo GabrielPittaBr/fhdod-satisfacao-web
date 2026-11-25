@@ -41,3 +41,13 @@ export function mensagemDeErro(erro: unknown, padrao = 'Não foi possível concl
   if (erro instanceof ErroApi && erro.status < 500) return erro.message
   return padrao
 }
+
+/**
+ * A mensagem de um aviso geral, fora do campo do formulário. Na validação de um campo que não está na tela, como
+ * a ordem das perguntas ou o período da evolução, a mensagem do campo, já escrita pela API para quem está na tela
+ * ("Escolha um período de até 366 dias ou veja por semana ou por mês"), diz mais que "Dados inválidos".
+ */
+export function mensagemGeral(erro: unknown, padrao?: string) {
+  const primeiro = erro instanceof ErroApi && erro.codigo === 'VALIDACAO' ? erro.detalhes[0] : undefined
+  return primeiro?.mensagem ?? mensagemDeErro(erro, padrao)
+}

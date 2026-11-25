@@ -60,5 +60,10 @@ export function usarApiFalsa() {
       const enviado = await pedidos[0]!.clone().text()
       expect(enviado ? JSON.parse(enviado) : undefined).toEqual(corpo)
     },
+    /** A query string da chamada, como objeto: os filtros que foram de fato à API. */
+    consultaEnviada(): Record<string, string> {
+      expect(pedidos).toHaveLength(1)
+      return Object.fromEntries(new URL(pedidos[0]!.url).searchParams)
+    },
   }
 }

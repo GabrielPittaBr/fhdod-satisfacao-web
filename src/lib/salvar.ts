@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { FieldValues, Path, UseFormReturn } from 'react-hook-form'
 import { toast } from 'sonner'
-import { ErroApi, mensagemDeErro } from '@/lib/api/erro'
+import { ErroApi, mensagemGeral } from '@/lib/api/erro'
 
 /**
  * Grava, recarrega as listas afetadas e avisa o resultado.
@@ -31,15 +31,6 @@ export function useSalvar<TDados, TResultado>(
       for (const chave of opcoes.recarregar) void clienteDeDados.invalidateQueries({ queryKey: [chave] })
     },
   })
-}
-
-/**
- * A mensagem do aviso geral. Na validação de um campo que não está na tela, como a lista da ordem das
- * perguntas, a mensagem do campo, já escrita pela API para quem está na tela, diz mais que "Dados inválidos".
- */
-function mensagemGeral(erro: unknown) {
-  const primeiro = erro instanceof ErroApi && erro.codigo === 'VALIDACAO' ? erro.detalhes[0] : undefined
-  return primeiro?.mensagem ?? mensagemDeErro(erro)
 }
 
 /** Copia para a área de transferência e confirma com um aviso. */

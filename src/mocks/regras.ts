@@ -47,5 +47,3 @@ export function calcularNps(notas: number[]): number | null {
   const detratores = notas.filter((n) => n <= 6).length
   return Math.round(((promotores - detratores) / notas.length) * 100)
 }
-
-export const mascararTelefone = (telefone: string) => `•••• ${telefone.slice(-4)}`
