@@ -282,7 +282,9 @@ export default function PerguntasPage() {
                         onDragOver={(evento) => evento.preventDefault()}
                         onDrop={() => arrastando !== null && mover(arrastando, i)}
                         className={cn(
-                          'flex items-start gap-2 rounded-lg border bg-card p-2 sm:items-center',
+                          // no celular, os botões vão para uma linha só deles: lado a lado com o texto, a
+                          // pergunta ficava com uma palavra por linha
+                          'flex flex-wrap items-start gap-2 rounded-lg border bg-card p-2 sm:flex-nowrap sm:items-center',
                           arrastando === i && 'opacity-50',
                           (naPrevia ?? lista[0]?.id) === pergunta.id && 'border-primary',
                           !pergunta.ativa && 'bg-muted',
@@ -309,7 +311,7 @@ export default function PerguntasPage() {
                             {!pergunta.ativa && ' (inativa: não aparece na pesquisa)'}
                           </span>
                         </button>
-                        <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                        <div className="flex w-full shrink-0 flex-wrap justify-end gap-1 sm:w-auto">
                           <Button
                             variant="ghost"
                             size="icon"
