@@ -16,11 +16,6 @@ export type BaseData = Contrato['BaseData']
 export type Granularidade = Contrato['Granularidade']
 export type StatusRetorno = Contrato['StatusRetorno']
 
-/** O envelope das respostas de sucesso da API. Só os dados simulados da TV ainda o usam. */
-export interface Envelope<T> {
-  data: T
-}
-
 /** A página de uma lista: `meta.total` conta todas as páginas. */
 export type Meta = Contrato['Meta']
 

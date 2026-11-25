@@ -1,4 +1,4 @@
-// "Banco" do mock. Faz o papel do servidor para os indicadores, as respostas e a TV, no localStorage.
+// "Banco" do mock. Faz o papel do servidor para a exportação, no localStorage.
 // Os cadastros já vêm da API (ticket 06): os setores, as categorias, os turnos e as perguntas daqui só dão nome
 // e forma às respostas simuladas.
 // Limitação conhecida: só vale dentro do mesmo navegador.
@@ -10,12 +10,11 @@ import type {
   Classificacao,
   Pergunta,
   Setor,
-  TelaTv,
   TipoComentario,
   TipoPergunta,
   Turno,
 } from '@/lib/api/tipos'
-import { CATEGORIAS, CONFIGURACOES, PERGUNTAS, SETORES, TURNOS, TV_TELAS } from './seed/dados'
+import { CATEGORIAS, CONFIGURACOES, PERGUNTAS, SETORES, TURNOS } from './seed/dados'
 import { gerarHistorico } from './seed/historico'
 
 export interface RespostaBanco {
@@ -46,7 +45,6 @@ export interface Banco {
   categorias: Categoria[]
   turnos: Turno[]
   perguntas: Omit<Pergunta, 'temRespostas'>[]
-  tvTelas: (TelaTv & { token: string })[]
   configuracoes: typeof CONFIGURACOES
   respostasNovas: RespostaBanco[]
   auditoria: { em: string; usuarioId: number; acao: string; entidadeId: number }[]
@@ -65,7 +63,6 @@ function inicial(): Banco {
     categorias: CATEGORIAS,
     turnos: TURNOS,
     perguntas: PERGUNTAS,
-    tvTelas: TV_TELAS,
     configuracoes: CONFIGURACOES,
     respostasNovas: [],
     auditoria: [],
@@ -87,7 +84,7 @@ function carregar(): Banco {
 export let banco = carregar()
 
 // O histórico é recalculado a cada carga (semente fixa por dia), então não ocupa o localStorage.
-// Só é gerado quando o painel ou a TV pedem: a pesquisa do paciente não paga esse custo.
+// Só é gerado quando a exportação pede: a pesquisa do paciente não paga esse custo.
 let historico: RespostaBanco[] | null = null
 export const todasAsRespostas = (): RespostaBanco[] => [
   ...(historico ??= gerarHistorico()),

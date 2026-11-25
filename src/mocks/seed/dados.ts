@@ -1,5 +1,4 @@
-// Dados iniciais do mock. Tudo aqui é inventado: nenhum nome, telefone ou
-// comentário é real. Os tokens das telas de TV são falsos e só existem para a demonstração.
+// Dados iniciais do mock. Tudo aqui é inventado: nenhum nome, telefone ou comentário é real.
 import type { Categoria, Pergunta, Setor, TipoComentario, Turno } from '@/lib/api/tipos'
 
 export const SETORES: Setor[] = [
@@ -119,17 +118,6 @@ export const PERGUNTAS: Omit<Pergunta, 'temRespostas'>[] = PERGUNTAS_SEED.map((p
   id: i + 1,
   ordem: todas.slice(0, i).filter((q) => q.setorId === pergunta.setorId).length + 1,
 }))
-
-export const TV_TELAS = [
-  { id: 1, nome: 'Recepção principal', ativa: true, ultimoAcessoEm: null, token: 'demo-recepcao-fhdod' },
-  {
-    id: 2,
-    nome: 'Corredor da Internação',
-    ativa: false,
-    ultimoAcessoEm: null,
-    token: 'demo-corredor-desativada',
-  },
-]
 
 // Padrões da tabela "Configurações do sistema" do Plano de Desenvolvimento.
 export const CONFIGURACOES = {
