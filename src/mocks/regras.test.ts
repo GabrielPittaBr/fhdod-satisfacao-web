@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  calcularNps,
-  classificarNota,
-  classificarNps,
-  classificarResposta,
-  mascararTelefone,
-  PERMISSOES_POR_PERFIL,
-} from './regras'
+import { calcularNps, classificarNota, classificarNps, classificarResposta, mascararTelefone } from './regras'
 import { gerarHistorico } from './seed/historico'
 
 describe('classificação', () => {
@@ -54,18 +47,8 @@ describe('cálculo do NPS', () => {
   })
 })
 
-describe('permissões e privacidade', () => {
-  it('só Super Admin e Ouvidoria veem telefones', () => {
-    const comTelefone = Object.entries(PERMISSOES_POR_PERFIL).flatMap(([perfil, p]) =>
-      p.includes('contatos:ver') ? [perfil] : [],
-    )
-    expect(comTelefone).toEqual(['SUPER_ADMIN', 'OUVIDORIA'])
-  })
-
-  it('visualizador não vê respostas nem comentários', () => {
-    expect(PERMISSOES_POR_PERFIL.VISUALIZADOR).toEqual(['dashboard:ver', 'exportacao:resumo'])
-  })
-
+// As permissões de cada perfil vêm do /auth/me desde o ticket 05; quem as testa é a API.
+describe('privacidade', () => {
   it('telefone mascarado mostra só os 4 últimos dígitos', () => {
     expect(mascararTelefone('51900000042')).toBe('•••• 0042')
   })
