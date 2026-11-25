@@ -26,12 +26,6 @@ export interface Envelope<T> {
 /** A página de uma lista: `meta.total` conta todas as páginas. */
 export type Meta = Contrato['Meta']
 
-/** Só os dados simulados ainda usam: saem no commit seguinte, com as leituras simuladas. */
-export interface Lista<T> {
-  data: T[]
-  meta: Meta
-}
-
 export type DetalheErro = Contrato['DetalheErro']
 
 /** O corpo JSON que uma rota do contrato recebe: `CorpoDe<'/api/v1/setores', 'post'>`. */

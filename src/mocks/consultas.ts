@@ -1,4 +1,5 @@
-// Leituras do painel e da TV: dashboard, respostas, pedidos de retorno e exportação.
+// Dados simulados que ainda não vêm da API: a exportação (até o ticket 09) e os indicadores da TV (até o 08).
+// O dashboard, as respostas e os pedidos de retorno já são da API (ticket 07).
 // O escopo por setor é aplicado aqui dentro, como a API faz na própria consulta.
 import {
   eachDayOfInterval,
@@ -11,38 +12,20 @@ import {
   subDays,
 } from 'date-fns'
 import type {
-  ComentarioRecente,
   Envelope,
   FiltrosDashboard,
-  FiltrosRespostas,
   Granularidade,
   IndicadorCategoria,
   IndicadoresTv,
   ItemRanking,
-  Lista,
   NpsSetor,
-  PedidoRetorno,
   PontoEvolucao,
-  Ranking,
-  RespostaDetalhe,
-  RespostaResumo,
   Resumo,
-  TipoComentario,
 } from '@/lib/api/tipos'
 import { autenticar, exigir, exigirSetor, type Contexto } from './auth'
 import { banco, salvar, todasAsRespostas, type RespostaBanco } from './banco'
-import { calcularNps, classificarNota, mascararTelefone, type Limites } from './regras'
+import { calcularNps } from './regras'
 import { erros, rede } from './rede'
-
-function limites(): Limites {
-  const c = banco.configuracoes
-  return {
-    npsBaixa: c.nps_limite_baixa,
-    npsBaixissima: c.nps_limite_baixissima,
-    escalaBaixa: c.escala_limite_baixa,
-    escalaBaixissima: c.escala_limite_baixissima,
-  }
-}
 
 const iso = (data: Date) => format(data, 'yyyy-MM-dd')
 const nomeDoSetor = (id: number) => banco.setores.find((s) => s.id === id)?.nome ?? 'Setor removido'
@@ -168,14 +151,6 @@ function porCategoria(respostas: RespostaBanco[]): IndicadorCategoria[] {
     .filter((c) => c.total > 0)
 }
 
-function ranquear(respostas: RespostaBanco[]): Ranking {
-  // menos de 5 notas não entra: média de amostra tão pequena engana
-  const pontos = notasPorPonto(respostas)
-    .filter((p) => p.total >= 5)
-    .sort((a, b) => b.media - a.media || b.percentual45 - a.percentual45)
-  return { melhores: pontos.slice(0, 3), piores: pontos.slice(3).slice(-3).reverse() }
-}
-
 /** TV: o ponto mais bem avaliado de cada setor (até três), para o destaque não ficar num setor só. */
 function destaquesPorSetor(respostas: RespostaBanco[]): IndicadoresTv['destaques'] {
   const destaques: IndicadoresTv['destaques'] = []
@@ -194,183 +169,6 @@ function contextoDoDashboard(token: string, f: Partial<FiltrosDashboard>): Conte
   exigir(contexto, 'dashboard:ver')
   if (f.setorId) exigirSetor(contexto, f.setorId)
   return contexto
-}
-
-/** GET /dashboard/resumo */
-export async function resumo(token: string, f: FiltrosDashboard): Promise<Envelope<Resumo>> {
-  await rede()
-  return { data: resumir(filtrar(contextoDoDashboard(token, f).setorIds, f)) }
-}
-
-/** GET /dashboard/nps-por-setor */
-export async function npsPorSetor(token: string, f: FiltrosDashboard): Promise<Envelope<NpsSetor[]>> {
-  await rede()
-  return { data: porSetor(filtrar(contextoDoDashboard(token, f).setorIds, f)) }
-}
-
-/** GET /dashboard/evolucao */
-export async function evolucao(
-  token: string,
-  f: FiltrosDashboard,
-  granularidade: Granularidade,
-): Promise<Envelope<PontoEvolucao[]>> {
-  await rede()
-  return { data: evoluir(filtrar(contextoDoDashboard(token, f).setorIds, f), f, granularidade) }
-}
-
-/** GET /dashboard/categorias */
-export async function categorias(
-  token: string,
-  f: FiltrosDashboard,
-): Promise<Envelope<IndicadorCategoria[]>> {
-  await rede()
-  return { data: porCategoria(filtrar(contextoDoDashboard(token, f).setorIds, f)) }
-}
-
-/** GET /dashboard/ranking */
-export async function ranking(token: string, f: FiltrosDashboard): Promise<Envelope<Ranking>> {
-  await rede()
-  return { data: ranquear(filtrar(contextoDoDashboard(token, f).setorIds, f)) }
-}
-
-/** GET /dashboard/comentarios */
-export async function comentarios(
-  token: string,
-  f: FiltrosDashboard & { tipo?: TipoComentario; porPagina?: number },
-): Promise<Lista<ComentarioRecente>> {
-  await rede()
-  const contexto = contextoDoDashboard(token, f)
-  exigir(contexto, 'comentarios:ver')
-  const todos = filtrar(contexto.setorIds, f)
-    .filter((r) => r.comentario && (!f.tipo || r.comentario.tipo === f.tipo))
-    .sort((a, b) => b.enviadoEm.localeCompare(a.enviadoEm))
-  const porPagina = f.porPagina ?? 8
-  return {
-    data: todos.slice(0, porPagina).map((r) => ({
-      id: r.id,
-      respostaId: r.id,
-      tipo: r.comentario!.tipo,
-      texto: r.comentario!.texto,
-      setor: nomeDoSetor(r.setorId),
-      dataAtendimento: r.dataAtendimento,
-      enviadoEm: r.enviadoEm,
-      classificacao: r.classificacao,
-    })),
-    meta: { pagina: 1, porPagina, total: todos.length },
-  }
-}
-
-const resumoDaResposta = (r: RespostaBanco): RespostaResumo => ({
-  id: r.id,
-  setorId: r.setorId,
-  setor: nomeDoSetor(r.setorId),
-  canal: r.canal,
-  dataAtendimento: r.dataAtendimento,
-  turno: nomeDoTurno(r.turnoId),
-  nps: r.nps,
-  classificacao: r.classificacao,
-  enviadoEm: r.enviadoEm,
-  temComentario: r.comentario !== null,
-  pediuRetorno: r.contato !== null,
-})
-
-function filtrarRespostas(contexto: Contexto, f: FiltrosRespostas) {
-  if (f.setorId) exigirSetor(contexto, f.setorId)
-  return filtrar(contexto.setorIds, f).filter(
-    (r) =>
-      (!f.classificacao || r.classificacao === f.classificacao) &&
-      (f.comComentario === undefined || (r.comentario !== null) === f.comComentario) &&
-      (f.comRetorno === undefined || (r.contato !== null) === f.comRetorno),
-  )
-}
-
-/** GET /respostas */
-export async function listarRespostas(token: string, f: FiltrosRespostas): Promise<Lista<RespostaResumo>> {
-  await rede()
-  const contexto = autenticar(token)
-  exigir(contexto, 'respostas:ver')
-  const campo = f.ordenarPor ?? 'enviadoEm'
-  const sentido = f.ordem === 'asc' ? 1 : -1
-  const comparar = (a: RespostaBanco, b: RespostaBanco) =>
-    campo === 'nps' ? a.nps - b.nps : a[campo].localeCompare(b[campo])
-  const todas = filtrarRespostas(contexto, f).sort((a, b) => sentido * (comparar(a, b) || a.id - b.id))
-  const pagina = f.pagina ?? 1
-  const porPagina = f.porPagina ?? 20
-  return {
-    data: todas.slice((pagina - 1) * porPagina, pagina * porPagina).map(resumoDaResposta),
-    meta: { pagina, porPagina, total: todas.length },
-  }
-}
-
-/** GET /respostas/:id */
-export async function buscarResposta(token: string, id: number): Promise<Envelope<RespostaDetalhe>> {
-  await rede()
-  const contexto = autenticar(token)
-  exigir(contexto, 'respostas:ver')
-  const r = todasAsRespostas().find((resposta) => resposta.id === id)
-  if (!r) throw erros.naoEncontrado('Resposta não encontrada.')
-  exigirSetor(contexto, r.setorId)
-  return {
-    data: {
-      ...resumoDaResposta(r),
-      itens: r.itens.map((i) => ({
-        perguntaId: i.perguntaId,
-        perguntaTexto: i.perguntaTexto,
-        categoria: nomeDaCategoria(i.categoriaId),
-        tipo: i.tipo,
-        valorNumero: i.valorNumero,
-        valorTexto: i.valorTexto,
-        classificacao: i.valorNumero === null ? null : classificarNota(i.valorNumero, limites()),
-      })),
-      comentario: r.comentario,
-      // telefone sempre mascarado aqui; o número completo só em "revelar telefone"
-      contato: r.contato && {
-        id: r.contato.id,
-        telefoneMascarado: mascararTelefone(r.contato.telefone),
-        status: 'NOVO',
-      },
-    },
-  }
-}
-
-/** GET /contatos */
-export async function listarContatos(token: string): Promise<Lista<PedidoRetorno>> {
-  await rede()
-  const contexto = autenticar(token)
-  exigir(contexto, 'contatos:ver')
-  const pedidos = filtrar(contexto.setorIds, {})
-    .filter((r) => r.contato)
-    .sort((a, b) => b.contato!.consentimentoEm.localeCompare(a.contato!.consentimentoEm))
-    .map((r): PedidoRetorno => ({
-      id: r.contato!.id,
-      respostaId: r.id,
-      setor: nomeDoSetor(r.setorId),
-      dataAtendimento: r.dataAtendimento,
-      nps: r.nps,
-      classificacao: r.classificacao,
-      comentario: r.comentario,
-      telefoneMascarado: mascararTelefone(r.contato!.telefone),
-      consentimentoEm: r.contato!.consentimentoEm,
-      status: 'NOVO',
-    }))
-  return { data: pedidos, meta: { pagina: 1, porPagina: pedidos.length, total: pedidos.length } }
-}
-
-/** POST /contatos/:id/revelar-telefone: devolve o número completo e registra na auditoria. */
-export async function revelarTelefone(token: string, id: number): Promise<Envelope<{ telefone: string }>> {
-  await rede()
-  const contexto = autenticar(token)
-  exigir(contexto, 'contatos:ver')
-  const resposta = todasAsRespostas().find((r) => r.contato?.id === id)
-  if (!resposta?.contato) throw erros.naoEncontrado('Pedido de retorno não encontrado.')
-  banco.auditoria.push({
-    em: new Date().toISOString(),
-    usuarioId: contexto.usuarioId,
-    acao: 'contato.revelar_telefone',
-    entidadeId: id,
-  })
-  salvar()
-  return { data: { telefone: resposta.contato.telefone } }
 }
 
 // ---------- Exportação ----------
