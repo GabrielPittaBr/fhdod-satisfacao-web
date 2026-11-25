@@ -11,15 +11,8 @@ import type {
   Turno,
   Usuario,
 } from '@/lib/api/tipos'
-import { autenticar, emitirRefresh, exigir, exigirSetor, revogarSessoes } from './auth'
-import {
-  banco,
-  proximoId,
-  restaurarDadosIniciais,
-  salvar,
-  todasAsRespostas,
-  type UsuarioBanco,
-} from './banco'
+import { autenticar, exigir, exigirSetor } from './auth'
+import { banco, proximoId, salvar, todasAsRespostas, type UsuarioBanco } from './banco'
 import { erros, rede, tokenAleatorio } from './rede'
 
 const PERFIS: Perfil[] = ['SUPER_ADMIN', 'GESTOR', 'OUVIDORIA', 'VISUALIZADOR']
@@ -415,16 +408,15 @@ export async function definirSetoresDoUsuario(token: string, id: number, setorId
   salvar()
 }
 
-/** PATCH /usuarios/:id/status: desativar também encerra as sessões da pessoa. */
+/** PATCH /usuarios/:id/status */
 export async function alterarStatusUsuario(token: string, id: number, ativo: boolean): Promise<void> {
   await rede()
   const contexto = autenticar(token)
   exigir(contexto, 'usuarios:gerenciar')
   const usuario = achar(banco.usuarios, id, 'Usuário')
-  if (!ativo && usuario.id === contexto.usuario.id)
+  if (!ativo && usuario.id === contexto.usuarioId)
     throw erros.conflito('Você não pode desativar a própria conta.')
   usuario.ativo = ativo
-  if (!ativo) revogarSessoes(id)
   salvar()
 }
 
@@ -438,7 +430,6 @@ export async function redefinirSenha(
   const usuario = achar(banco.usuarios, id, 'Usuário')
   usuario.senha = senhaProvisoria()
   usuario.trocarSenha = true
-  revogarSessoes(id)
   salvar()
   return { data: { senhaProvisoria: usuario.senha } }
 }
@@ -480,15 +471,4 @@ export async function alterarStatusTelaTv(token: string, id: number, ativa: bool
   exigir(autenticar(token), 'tvwall:gerenciar')
   achar(banco.tvTelas, id, 'Tela').ativa = ativa
   salvar()
-}
-
-// ---------- Demonstração ----------
-
-/** Só existe no mock: volta aos dados iniciais, mantendo quem está logado. */
-export async function restaurarDados(token: string): Promise<void> {
-  await rede()
-  const contexto = autenticar(token)
-  exigir(contexto, 'setores:gerenciar')
-  restaurarDadosIniciais()
-  emitirRefresh(contexto.usuario.id)
 }

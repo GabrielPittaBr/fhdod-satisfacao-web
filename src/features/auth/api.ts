@@ -1,77 +1,106 @@
-// Chamadas de autenticação. Quando a API existir, só este arquivo muda (openapi-fetch).
+// Autenticação do painel, na API: login, sessão, renovação, saída e troca de senha.
+// O token de acesso fica só em memória (stores/sessao); o refresh fica no cookie HttpOnly, que só a API lê
+// e que o navegador manda sozinho às rotas de /api/v1/auth.
+import { api, pedir, type Resultado } from '@/lib/api/cliente'
 import { ErroApi } from '@/lib/api/erro'
 import type { Sessao } from '@/lib/api/tipos'
-import * as mock from '@/mocks/auth'
-import { restaurarDados } from '@/mocks/cadastros'
+import { queryClient } from '@/lib/query-client'
 import { useSessao } from '@/stores/sessao'
+
+const comoBearer = (token: string) => ({ Authorization: `Bearer ${token}` })
 
 let renovando: Promise<string> | null = null
 
-async function renovarToken() {
-  const { data } = await mock.refresh()
-  useSessao.getState().definirToken(data.tokenAcesso)
-  return data.tokenAcesso
+/**
+ * POST /auth/refresh. Uma renovação por vez nesta aba: a API troca o refresh a cada uso, então uma segunda
+ * renovação ao mesmo tempo iria com o cookie já trocado, levaria 401 e derrubaria a sessão.
+ */
+function renovarToken(): Promise<string> {
+  renovando ??= pedir(api.POST('/api/v1/auth/refresh'))
+    .then(({ data }) => {
+      useSessao.getState().definirToken(data.tokenAcesso)
+      return data.tokenAcesso
+    })
+    .finally(() => (renovando = null))
+  return renovando
+}
+
+/** Esquece a sessão nesta aba, com o que já foi carregado: o próximo a entrar não vê os dados de quem saiu. */
+function encerrarNestaAba() {
+  useSessao.getState().limpar()
+  queryClient.clear()
 }
 
 /**
- * Envia o token de acesso e, num 401, renova a sessão uma única vez e repete a chamada.
+ * Envia o token de acesso e, num 401, renova a sessão uma única vez e repete a chamada. Se a renovação
+ * falhar, ou se a chamada repetida também levar 401, a sessão acaba e o painel volta para o login.
  * Todas as features do painel passam por aqui.
  */
 export async function comToken<T>(chamada: (token: string) => Promise<T>): Promise<T> {
+  const usado = useSessao.getState().token ?? ''
   try {
-    return await chamada(useSessao.getState().token ?? '')
+    return await chamada(usado)
   } catch (erro) {
     if (!(erro instanceof ErroApi) || erro.status !== 401) throw erro
     try {
-      renovando ??= renovarToken().finally(() => (renovando = null))
-      return await chamada(await renovando)
-    } catch (erroAoRenovar) {
-      if (erroAoRenovar instanceof ErroApi && erroAoRenovar.status === 401) useSessao.getState().limpar()
-      throw erroAoRenovar
+      // outra chamada pode já ter renovado enquanto esta esperava: aí basta repetir com o token novo
+      const atual = useSessao.getState().token
+      return await chamada(atual && atual !== usado ? atual : await renovarToken())
+    } catch (erroDepois) {
+      if (erroDepois instanceof ErroApi && erroDepois.status === 401) encerrarNestaAba()
+      throw erroDepois
     }
   }
 }
 
-async function carregarSessao(token: string) {
-  const { data } = await mock.me(token)
-  useSessao.getState().definir(token, data)
-  return data
-}
+/**
+ * Chamada do painel à API, com o token no cabeçalho `Authorization` e a renovação do `comToken`.
+ * Uso: `(await pedirComToken((headers) => api.GET('/api/v1/...', { headers }))).data`.
+ */
+export const pedirComToken = <R extends Resultado>(
+  chamada: (headers: { Authorization: string }) => Promise<R>,
+) => comToken((token) => pedir(chamada(comoBearer(token))))
+
+/** GET /auth/me */
+const buscarSessao = (token: string) =>
+  pedir(api.GET('/api/v1/auth/me', { headers: comoBearer(token) })).then(({ data }) => data)
 
 /** POST /auth/login + GET /auth/me */
 export async function entrar(email: string, senha: string): Promise<Sessao> {
-  const { data } = await mock.login(email, senha)
-  return carregarSessao(data.tokenAcesso)
+  const { data } = await pedir(api.POST('/api/v1/auth/login', { body: { email, senha } }))
+  const sessao = await buscarSessao(data.tokenAcesso)
+  useSessao.getState().definir(data.tokenAcesso, sessao)
+  return sessao
 }
 
 /** Ao recarregar a página: POST /auth/refresh + GET /auth/me. Devolve null se não há sessão. */
 export async function recuperarSessao(): Promise<Sessao | null> {
   try {
-    return await carregarSessao(await renovarToken())
+    const token = await renovarToken()
+    const sessao = await buscarSessao(token)
+    useSessao.getState().definir(token, sessao)
+    return sessao
   } catch (erro) {
     if (erro instanceof ErroApi && erro.status === 401) return null
     throw erro
   }
 }
 
-/** POST /auth/logout */
+/** POST /auth/logout: encerra todas as sessões da pessoa e apaga o cookie. Sair nunca falha para quem clicou. */
 export async function sair() {
-  const { token, limpar } = useSessao.getState()
+  const { token } = useSessao.getState()
   try {
-    if (token) await mock.logout(token)
+    await pedir(api.POST('/api/v1/auth/logout', { headers: token ? comoBearer(token) : {} }))
+  } catch {
+    // sem rede, a sessão continua na API até o refresh vencer, mas nesta aba ela acaba do mesmo jeito
   } finally {
-    limpar()
+    encerrarNestaAba()
   }
 }
 
-/** PATCH /auth/senha */
+/** PATCH /auth/senha e, depois, o /auth/me de novo: o `trocarSenha` volta falso. */
 export async function trocarSenha(corpo: { senhaAtual: string; novaSenha: string }) {
-  await comToken((token) => mock.trocarSenha(token, corpo))
-  await carregarSessao(useSessao.getState().token ?? '')
+  await pedirComToken((headers) => api.PATCH('/api/v1/auth/senha', { headers, body: corpo }))
+  const sessao = await comToken(buscarSessao)
+  useSessao.getState().definir(useSessao.getState().token ?? '', sessao)
 }
-
-/** Só enquanto for mock: atalhos de demonstração da tela de login. */
-export const listarAcessosDemo = () => mock.acessosDemo()
-
-/** Só enquanto for mock: volta aos dados iniciais (ação do menu do Super Admin). */
-export const restaurarDadosDemo = () => comToken((token) => restaurarDados(token))

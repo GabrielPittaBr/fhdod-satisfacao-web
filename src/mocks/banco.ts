@@ -61,7 +61,6 @@ export interface Banco {
   tvTelas: (TelaTv & { token: string })[]
   configuracoes: typeof CONFIGURACOES
   respostasNovas: RespostaBanco[]
-  refreshTokens: { token: string; usuarioId: number; expiraEm: number }[]
   auditoria: { em: string; usuarioId: number; acao: string; entidadeId: number }[]
 }
 
@@ -86,7 +85,6 @@ function inicial(): Banco {
     tvTelas: TV_TELAS,
     configuracoes: CONFIGURACOES,
     respostasNovas: [],
-    refreshTokens: [],
     auditoria: [],
   })
 }
@@ -120,11 +118,6 @@ export function salvar() {
   } catch {
     // sem espaço no navegador: os dados seguem só na memória desta aba
   }
-}
-
-export function restaurarDadosIniciais() {
-  banco = inicial()
-  salvar()
 }
 
 export const proximoId = (lista: { id: number }[], minimo = 0) =>

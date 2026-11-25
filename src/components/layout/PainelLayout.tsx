@@ -1,4 +1,3 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Building2,
   ChartColumn,
@@ -8,7 +7,6 @@ import {
   Menu,
   MessagesSquare,
   PhoneCall,
-  RotateCcw,
   Tags,
   Tv,
   Users,
@@ -16,18 +14,7 @@ import {
 } from 'lucide-react'
 import { Suspense, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
-import { toast } from 'sonner'
 import logo from '@/assets/logo.png'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -46,9 +33,8 @@ import {
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Toaster } from '@/components/ui/sonner'
-import { restaurarDadosDemo, sair } from '@/features/auth/api'
+import { sair } from '@/features/auth/api'
 import type { Permissao } from '@/lib/api/tipos'
-import { mensagemDeErro } from '@/lib/api/erro'
 import { ROTULO_PERFIL } from '@/lib/rotulos'
 import { cn } from '@/lib/utils'
 import { useSessao } from '@/stores/sessao'
@@ -129,73 +115,38 @@ function Navegacao({ aoNavegar }: { aoNavegar?: () => void }) {
 
 function MenuDoUsuario() {
   const navegar = useNavigate()
-  const clienteDeDados = useQueryClient()
   const sessao = useSessao((s) => s.sessao)
-  const [confirmandoRestauracao, setConfirmandoRestauracao] = useState(false)
-
-  const restauracao = useMutation({
-    mutationFn: restaurarDadosDemo,
-    onSuccess: () => {
-      void clienteDeDados.invalidateQueries()
-      toast.success('Dados de demonstração restaurados')
-    },
-    onError: (erro) => toast.error(mensagemDeErro(erro)),
-  })
 
   if (!sessao) return null
-  const { usuario, setores, todosSetores, permissoes } = sessao
+  const { usuario, setores, todosSetores } = sessao
 
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-auto min-h-11 max-w-full gap-2 px-2 py-1 text-left">
-            <span className="min-w-0">
-              <span className="block truncate font-semibold">{usuario.nome}</span>
-              <span className="block truncate text-xs font-normal text-muted-foreground">
-                {ROTULO_PERFIL[usuario.perfil]}
-                {/* quem não vê todos os setores enxerga aqui quais são os seus */}
-                {!todosSetores && `: ${setores.map((s) => s.nome).join(', ') || 'nenhum setor vinculado'}`}
-              </span>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-auto min-h-11 max-w-full gap-2 px-2 py-1 text-left">
+          <span className="min-w-0">
+            <span className="block truncate font-semibold">{usuario.nome}</span>
+            <span className="block truncate text-xs font-normal text-muted-foreground">
+              {ROTULO_PERFIL[usuario.perfil]}
+              {/* quem não vê todos os setores enxerga aqui quais são os seus */}
+              {!todosSetores && `: ${setores.map((s) => s.nome).join(', ') || 'nenhum setor vinculado'}`}
             </span>
-            <ChevronDown aria-hidden className="shrink-0" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-60">
-          <DropdownMenuItem className="min-h-10" onSelect={() => navegar('/painel/senha')}>
-            <KeyRound aria-hidden />
-            Trocar senha
-          </DropdownMenuItem>
-          {permissoes.includes('setores:gerenciar') && (
-            <DropdownMenuItem className="min-h-10" onSelect={() => setConfirmandoRestauracao(true)}>
-              <RotateCcw aria-hidden />
-              Restaurar dados de demonstração
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="min-h-10" onSelect={() => void sair().then(() => navegar('/login'))}>
-            <LogOut aria-hidden />
-            Sair
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <AlertDialog open={confirmandoRestauracao} onOpenChange={setConfirmandoRestauracao}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Restaurar os dados de demonstração?</AlertDialogTitle>
-            <AlertDialogDescription>
-              As respostas enviadas neste navegador e as mudanças em setores, perguntas, usuários e telas
-              serão apagadas. Não dá para desfazer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => restauracao.mutate()}>Restaurar dados</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+          </span>
+          <ChevronDown aria-hidden className="shrink-0" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-60">
+        <DropdownMenuItem className="min-h-10" onSelect={() => navegar('/painel/senha')}>
+          <KeyRound aria-hidden />
+          Trocar senha
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="min-h-10" onSelect={() => void sair().then(() => navegar('/login'))}>
+          <LogOut aria-hidden />
+          Sair
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
