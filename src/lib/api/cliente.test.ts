@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { criarCliente, pedir } from './cliente'
+import { criarCliente, nomeDoArquivo, pedir, pedirArquivo } from './cliente'
 import { ErroApi, MENSAGEM_SEM_CONEXAO } from './erro'
 
 const json = (status: number, corpo: unknown, cabecalhos: Record<string, string> = {}) =>
@@ -102,5 +102,83 @@ describe('cliente da API', () => {
       throw cancelado
     })
     await expect(abrirPesquisa(cliente)).rejects.toBe(cancelado)
+  })
+})
+
+describe('arquivos da API', () => {
+  const NOVEMBRO = { inicio: '2026-11-01', fim: '2026-11-30', base: 'ATENDIMENTO' } as const
+  const baixarResumo = (cliente: ReturnType<typeof criarCliente>) =>
+    pedirArquivo(
+      cliente.GET('/api/v1/exportacoes/resumo.pdf', { params: { query: NOVEMBRO }, parseAs: 'blob' }),
+      'padrao.pdf',
+    )
+  const arquivo = (corpo: BodyInit, cabecalhos: Record<string, string> = {}) =>
+    new Response(corpo, { status: 200, headers: { 'Content-Type': 'application/pdf', ...cabecalhos } })
+
+  it('devolve o arquivo com o nome do Content-Disposition', async () => {
+    const cliente = clienteQue(async () =>
+      arquivo('%PDF-1.7 conteúdo', {
+        'Content-Disposition': 'attachment; filename="fhdod-resumo-2026-11-01-a-2026-11-30.pdf"',
+      }),
+    )
+    const { nome, conteudo } = await baixarResumo(cliente)
+    expect(nome).toBe('fhdod-resumo-2026-11-01-a-2026-11-30.pdf')
+    expect(conteudo.type).toBe('application/pdf')
+    expect(await conteudo.text()).toBe('%PDF-1.7 conteúdo')
+  })
+
+  it('sem o Content-Disposition, usa o nome padrão', async () => {
+    const cliente = clienteQue(async () => arquivo('%PDF'))
+    await expect(baixarResumo(cliente)).resolves.toMatchObject({ nome: 'padrao.pdf' })
+  })
+
+  it('o erro antes do arquivo chega em JSON e vira o erro da API', async () => {
+    const cliente = clienteQue(async () =>
+      json(403, {
+        erro: {
+          codigo: 'SEM_PERMISSAO',
+          mensagem: 'Você não tem acesso a este setor.',
+          detalhes: [],
+          requestId: 'R3',
+        },
+      }),
+    )
+    const erro = await falhaCom(baixarResumo(cliente))
+    expect(erro).toMatchObject({ status: 403, codigo: 'SEM_PERMISSAO', requestId: 'R3' })
+    expect(erro.message).toBe('Você não tem acesso a este setor.')
+  })
+
+  it('o download que cai no meio falha como a falta de rede, sem arquivo pela metade', async () => {
+    // a API derruba a conexão quando um erro acontece com o arquivo já saindo
+    const cortado = new ReadableStream<Uint8Array>({
+      start(controle) {
+        controle.enqueue(new TextEncoder().encode('%PDF-1.7 come'))
+        controle.error(new TypeError('network error'))
+      },
+    })
+    const cliente = clienteQue(async () =>
+      arquivo(cortado, { 'Content-Disposition': 'attachment; filename="fhdod-resumo.pdf"' }),
+    )
+    expect(await falhaCom(baixarResumo(cliente))).toMatchObject({ status: 0, codigo: 'SEM_CONEXAO' })
+  })
+
+  it.each([
+    [
+      'attachment; filename="fhdod-resumo-2026-11-01-a-2026-11-30.xlsx"',
+      'fhdod-resumo-2026-11-01-a-2026-11-30.xlsx',
+    ],
+    ['attachment; filename=fhdod-respostas.xlsx', 'fhdod-respostas.xlsx'],
+    ['attachment; filename="aspas \\"dentro\\".pdf"', 'aspas "dentro".pdf'],
+    [
+      'attachment; filename="relatorio.xlsx"; filename*=UTF-8\'\'relat%C3%B3rio%20m%C3%AAs.xlsx',
+      'relatório mês.xlsx',
+    ],
+    ['attachment; filename*=UTF-8\'\'%E0%A4%A; filename="reserva.pdf"', 'reserva.pdf'],
+  ])('lê o nome de %s', (cabecalho, nome) => {
+    expect(nomeDoArquivo(cabecalho)).toBe(nome)
+  })
+
+  it.each([null, '', 'attachment', 'attachment; filename=""'])('sem nome em %j', (cabecalho) => {
+    expect(nomeDoArquivo(cabecalho)).toBeUndefined()
   })
 })

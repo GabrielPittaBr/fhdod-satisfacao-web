@@ -32,6 +32,52 @@ export interface Resultado {
  * com status 0. Uso: `(await pedir(api.GET('/api/v1/...', {...}))).data`.
  */
 export async function pedir<R extends Resultado>(chamada: Promise<R>): Promise<NonNullable<R['data']>> {
+  return (await esperar(chamada)).data as NonNullable<R['data']>
+}
+
+/** Um arquivo gerado pela API, com o nome com que ela pede que seja salvo. */
+export interface Arquivo {
+  nome: string
+  conteudo: Blob
+}
+
+/**
+ * O `pedir` das rotas que devolvem um arquivo, chamadas com `parseAs: 'blob'`: devolve o arquivo com o nome do
+ * `Content-Disposition`, ou o `nomePadrao` se ele não vier. Um erro antes de o arquivo começar a sair chega em JSON
+ * e vira o `ErroApi` de sempre; um download que cai no meio, como a falta de rede.
+ */
+export async function pedirArquivo<R extends Resultado & { data?: Blob }>(
+  chamada: Promise<R>,
+  nomePadrao: string,
+): Promise<Arquivo> {
+  const { data, response } = await esperar(chamada)
+  return {
+    nome: nomeDoArquivo(response.headers.get('Content-Disposition')) ?? nomePadrao,
+    conteudo: data ?? new Blob(),
+  }
+}
+
+/**
+ * O nome do arquivo no `Content-Disposition` (RFC 6266): o `filename*` (UTF-8, com os acentos) vale mais que o
+ * `filename`, que pode vir entre aspas. Sem nenhum dos dois, `undefined`.
+ */
+export function nomeDoArquivo(cabecalho: string | null): string | undefined {
+  if (!cabecalho) return undefined
+  const estendido = /filename\*\s*=\s*UTF-8''([^;\s]+)/i.exec(cabecalho)?.[1]
+  if (estendido) {
+    try {
+      return decodeURIComponent(estendido)
+    } catch {
+      // codificação quebrada: fica o `filename` simples
+    }
+  }
+  const simples = /filename\s*=\s*(?:"((?:[^"\\]|\\.)*)"|([^;\s]+))/i.exec(cabecalho)
+  const nome = simples?.[1]?.replace(/\\(.)/g, '$1') ?? simples?.[2]
+  return nome || undefined
+}
+
+/** Espera a chamada e devolve o resultado dela, se deu certo; qualquer falha vira o `ErroApi`. */
+async function esperar<R extends Resultado>(chamada: Promise<R>): Promise<R> {
   let resultado: R
   try {
     resultado = await chamada
@@ -39,7 +85,7 @@ export async function pedir<R extends Resultado>(chamada: Promise<R>): Promise<N
     throw erroDeRede(erro)
   }
   if (!resultado.response.ok) throw erroDaResposta(resultado.response, resultado.error)
-  return resultado.data as NonNullable<R['data']>
+  return resultado
 }
 
 /** O fetch rejeita só quando não há resposta: sem internet, DNS, servidor fora do ar ou CORS. */
