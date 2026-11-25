@@ -1,6 +1,6 @@
 // Dados iniciais do mock. Tudo aqui é inventado: nenhum nome, telefone ou
-// comentário é real. As credenciais são falsas e só existem para a demonstração.
-import type { Categoria, Perfil, Pergunta, Setor, TipoComentario, Turno } from '@/lib/api/tipos'
+// comentário é real. Os tokens das telas de TV são falsos e só existem para a demonstração.
+import type { Categoria, Pergunta, Setor, TipoComentario, Turno } from '@/lib/api/tipos'
 
 export const SETORES: Setor[] = [
   {
@@ -119,70 +119,6 @@ export const PERGUNTAS: Omit<Pergunta, 'temRespostas'>[] = PERGUNTAS_SEED.map((p
   id: i + 1,
   ordem: todas.slice(0, i).filter((q) => q.setorId === pergunta.setorId).length + 1,
 }))
-
-export interface UsuarioSeed {
-  id: number
-  nome: string
-  email: string
-  senha: string
-  perfil: Perfil
-  setorIds: number[]
-  trocarSenha: boolean
-  demo: string
-}
-
-export const USUARIOS: UsuarioSeed[] = [
-  {
-    id: 1,
-    nome: 'Paulo Klein',
-    email: 'admin@fhdod.example',
-    senha: 'admin-demo-2026',
-    perfil: 'SUPER_ADMIN',
-    setorIds: [],
-    trocarSenha: false,
-    demo: 'Vê e gerencia tudo',
-  },
-  {
-    id: 2,
-    nome: 'Marta Schneider',
-    email: 'marta@fhdod.example',
-    senha: 'gestor-demo-2026',
-    perfil: 'GESTOR',
-    setorIds: [1, 2],
-    trocarSenha: false,
-    demo: 'Pronto Atendimento e Internação',
-  },
-  {
-    id: 3,
-    nome: 'Renata Oliveira',
-    email: 'renata@fhdod.example',
-    senha: 'ouvidoria-demo-2026',
-    perfil: 'OUVIDORIA',
-    setorIds: [],
-    trocarSenha: false,
-    demo: 'Todos os setores e os pedidos de retorno',
-  },
-  {
-    id: 4,
-    nome: 'Diego Fontana',
-    email: 'diego@fhdod.example',
-    senha: 'leitura-demo-2026',
-    perfil: 'VISUALIZADOR',
-    setorIds: [3],
-    trocarSenha: false,
-    demo: 'Só os indicadores do Raio-X',
-  },
-  {
-    id: 5,
-    nome: 'Luana Becker',
-    email: 'luana@fhdod.example',
-    senha: 'provisoria-2026',
-    perfil: 'GESTOR',
-    setorIds: [4],
-    trocarSenha: true,
-    demo: 'Primeiro acesso: precisa trocar a senha',
-  },
-]
 
 export const TV_TELAS = [
   { id: 1, nome: 'Recepção principal', ativa: true, ultimoAcessoEm: null, token: 'demo-recepcao-fhdod' },
